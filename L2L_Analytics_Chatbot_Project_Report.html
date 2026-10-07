@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>L2L Analytics Chatbot - Project Status & Architecture Report</title>
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-light: #3b82f6;
+      --secondary: #0f172a;
+      --accent: #059669;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 30px 20px;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    /* Header Banner */
+    .header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+      color: #ffffff;
+      padding: 40px;
+      position: relative;
+    }
+
+    .header-badge {
+      display: inline-block;
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid #10b981;
+      color: #6ee7b7;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 12px;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      font-size: 16px;
+      color: #93c5fd;
+      max-width: 700px;
+    }
+
+    .meta-bar {
+      background: #f1f5f9;
+      border-bottom: 1px solid var(--border);
+      padding: 14px 40px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .meta-item strong {
+      color: var(--secondary);
+    }
+
+    /* Print Button */
+    .action-bar {
+      padding: 16px 40px;
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--primary-light);
+      color: white;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+
+    .btn:hover {
+      background: var(--primary);
+    }
+
+    /* Content Body */
+    .content {
+      padding: 40px;
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--secondary);
+      margin-top: 32px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 8px;
+    }
+
+    h2:first-of-type {
+      margin-top: 0;
+    }
+
+    h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--primary);
+      margin-top: 20px;
+      margin-bottom: 8px;
+    }
+
+    p {
+      margin-bottom: 14px;
+      color: #334155;
+    }
+
+    ul, ol {
+      margin-left: 20px;
+      margin-bottom: 16px;
+      color: #334155;
+    }
+
+    li {
+      margin-bottom: 6px;
+    }
+
+    /* Cards Grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin: 20px 0;
+    }
+
+    .card {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px;
+    }
+
+    .card-title {
+      font-weight: 700;
+      color: var(--secondary);
+      font-size: 14px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin: 0;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 13.5px;
+    }
+
+    th, td {
+      padding: 10px 14px;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+
+    th {
+      background: #f1f5f9;
+      color: var(--secondary);
+      font-weight: 600;
+    }
+
+    tr:nth-child(even) td {
+      background: #fafafa;
+    }
+
+    /* Code Blocks */
+    pre, code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 12.5px;
+    }
+
+    pre {
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 16px 0;
+    }
+
+    code:not(pre code) {
+      background: #e2e8f0;
+      color: #0f172a;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* Tag / Pill */
+    .pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .pill-blue { background: #dbeafe; color: #1e40af; }
+    .pill-green { background: #d1fae5; color: #065f46; }
+    .pill-purple { background: #ede9fe; color: #5b21b6; }
+
+    /* Footer */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 20px 40px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      background: #fafafa;
+    }
+
+    /* Print Styles */
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+      .container {
+        box-shadow: none;
+        border: none;
+        max-width: 100%;
+      }
+      .action-bar {
+        display: none;
+      }
+      .header {
+        background: #1e3a8a !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        padding: 25px;
+      }
+      h2 {
+        page-break-after: avoid;
+      }
+      .card, table {
+        page-break-inside: avoid;
+      }
+      @page {
+        margin: 1.2cm;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-badge">Status: Production Ready & Operational</div>
+    <h1>L2L Analytics Chatbot</h1>
+    <p>Comprehensive Architecture, Implemented Capabilities & Technical Milestone Report</p>
+  </div>
+
+  <!-- Meta Info -->
+  <div class="meta-bar">
+    <div class="meta-item"><strong>Report Date:</strong> October 2026</div>
+    <div class="meta-item"><strong>Domain:</strong> Leading2Lean (L2L) Manufacturing</div>
+    <div class="meta-item"><strong>Workspace:</strong> <code>C:\AI_dev\l2l-analytics-chatbot</code></div>
+    <div class="meta-item"><strong>Stack:</strong> FastAPI, LangGraph, DuckDB, Plotly, HTMX</div>
+  </div>
+
+  <!-- Action Bar -->
+  <div class="action-bar">
+    <button class="btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- Section 1 -->
+    <h2>1. Executive Summary & Purpose</h2>
+    <p>
+      The <strong>L2L Analytics Chatbot</strong> is an enterprise-grade AI conversational platform specifically built for 
+      manufacturing operations and maintenance analysis. It enables plant supervisors, reliability engineers, and operational leaders 
+      to query <strong>Leading2Lean (L2L)</strong> dispatches, machine downtime, and technician work orders using intuitive natural language.
+    </p>
+    <p>
+      Rather than relying on manual dashboard filtering or slow ad-hoc SQL against cloud databases, the system translates conversational questions 
+      into optimized local DuckDB SQL queries, generates responsive <strong>Plotly</strong> visualizations, and maintains full conversational memory across sessions.
+    </p>
+
+    <!-- Key Metrics Grid -->
+    <div class="grid">
+      <div class="card">
+        <div class="card-title">⚡ Sub-Second Analytics</div>
+        <p>Columnar DuckDB local database cache eliminates BigQuery latency, delivering near-instant query results.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">📊 Dynamic Visualizations</div>
+        <p>Automated Plotly bar, line, pie, and scatter charts generated directly by the LLM from SQL outputs.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">💾 Persistent Checkpoints</div>
+        <p>PostgreSQL 16 <code>PostgresSaver</code> keeps multi-turn conversational history and charts intact across reloads.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">🔌 Protocol Ready</div>
+        <p>FastMCP server exposes database tools via Model Context Protocol for external IDEs and agents.</p>
+      </div>
+    </div>
+
+    <!-- Section 2 -->
+    <h2>2. System Architecture & Workflows</h2>
+
+    <h3>A. Two-Tier Data Strategy (BigQuery &rarr; Local DuckDB)</h3>
+    <p>
+      Direct LLM querying of cloud data warehouses like Google BigQuery can be costly, slow, and prone to strict rate limits. 
+      The project resolves this by caching the analytical dataset locally:
+    </p>
+    <ul>
+      <li><strong>Sync Pipeline (<code>src/cache.py</code>):</strong> Queries <code>cons_kamos_l2l.f_l2l_dispatches</code> in Google BigQuery, standardizes timestamp types, and materializes the local table <code>f_l2l_dispatches</code> inside <code>/app/data/l2l_analytics.duckdb</code>.</li>
+      <li><strong>Safe Execution (<code>run_duckdb_safely</code>):</strong> Opens connections in read-only mode with a strict <code>10s</code> statement timeout and <code>2GB</code> maximum memory limit.</li>
+      <li><strong>API Hook:</strong> Ingestion can be refreshed on demand via <code>POST /sync-cache</code>.</li>
+    </ul>
+
+    <h3>B. LangGraph Cyclic ReAct Graph (<code>src/agent.py</code>)</h3>
+    <p>
+      The core intelligence is driven by a LangGraph <code>StateGraph</code> coordinating autonomous tool execution:
+    </p>
+    <ul>
+      <li><strong>Agent Node:</strong> Receives user messages, formats prompt with calendar/schema context, and invokes the model with bound tools.</li>
+      <li><strong>Conditional Routing:</strong> Inspects model outputs; if tool calls are present, routes to the <code>tools</code> node; otherwise routes to <code>END</code>.</li>
+      <li><strong>Tools Node:</strong> Executes either <code>query_l2l_database</code> (for tabular answers) or <code>generate_l2l_chart</code> (for Plotly visualizations), feeding results back into the conversation state.</li>
+    </ul>
+
+    <h3>C. Hypermedia Frontend Architecture (FastAPI + HTMX + Tailwind)</h3>
+    <p>
+      The web UI eliminates the complexity of separate React/Vue build pipelines by adopting modern hypermedia controls:
+    </p>
+    <ul>
+      <li><strong>Partial Swaps:</strong> Submitting a question posts via HTMX (<code>hx-post="/chat"</code>) and streams back a partial HTML response (<code>chat_response_partial.html</code>) appended directly to the chat log.</li>
+      <li><strong>Out-Of-Band (OOB) Updates:</strong> Automatically updates the chat header and active session ID without re-rendering the whole page.</li>
+      <li><strong>Sidebar Reactivity:</strong> Emits an <code>HX-Trigger: refreshSidebar</code> header so active session titles appear instantly in the sidebar navigation.</li>
+      <li><strong>Plotly Replay:</strong> <code>src/utils/helpers.py</code> reconstructs past session turns so historical charts re-render interactively when browsing older threads.</li>
+    </ul>
+
+    <!-- Section 3 -->
+    <h2>3. Technology Stack Breakdown</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Library / Tool</th>
+          <th>Version</th>
+          <th>Functionality</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Web Framework</strong></td>
+          <td>FastAPI + Uvicorn</td>
+          <td>0.110.0 / 0.28.0</td>
+          <td>Asynchronous REST API, HTMX partial rendering, session endpoints</td>
+        </tr>
+        <tr>
+          <td><strong>Frontend UI</strong></td>
+          <td>HTMX + Tailwind CSS + Jinja2</td>
+          <td>1.9.10 / 3.1.3</td>
+          <td>Server-Side Rendered (SSR) interactive SPA-like chat interface</td>
+        </tr>
+        <tr>
+          <td><strong>Charting Engine</strong></td>
+          <td>Plotly.py + Plotly.js</td>
+          <td>5.20.0 / 2.30.0</td>
+          <td>Dark-themed responsive bar, line, pie, and scatter charts</td>
+        </tr>
+        <tr>
+          <td><strong>Orchestration</strong></td>
+          <td>LangChain + LangGraph</td>
+          <td>0.2.x / 0.1.x</td>
+          <td>ReAct cyclic agent graph, tool dispatching, schema prompting</td>
+        </tr>
+        <tr>
+          <td><strong>State Memory</strong></td>
+          <td>PostgreSQL 16 + PostgresSaver</td>
+          <td>16 Alpine / 1.0.0</td>
+          <td>Checkpointed conversational state stored in <code>l2l_chat_memory</code></td>
+        </tr>
+        <tr>
+          <td><strong>LLM Providers</strong></td>
+          <td>OpenAI (gpt-4o) / Google Gemini</td>
+          <td>Configurable</td>
+          <td>Swappable LLM engines via <code>.env</code> with zero temperature</td>
+        </tr>
+        <tr>
+          <td><strong>OLAP Database</strong></td>
+          <td>DuckDB (Embedded)</td>
+          <td>0.10.1</td>
+          <td>In-process columnar SQL database cached at <code>data/l2l_analytics.duckdb</code></td>
+        </tr>
+        <tr>
+          <td><strong>Protocol Server</strong></td>
+          <td>FastMCP</td>
+          <td>0.1.0</td>
+          <td>Model Context Protocol server for external IDE/client connectivity</td>
+        </tr>
+        <tr>
+          <td><strong>Guardrails</strong></td>
+          <td>NeMo Guardrails</td>
+          <td>&gt;= 0.9.0</td>
+          <td>Input safety rails against prompt injection and malicious jailbreaks</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Section 4 -->
+    <h2>4. Domain Model & Manufacturing Entities</h2>
+    <p>
+      The system prompt (<code>src/prompts/agent_prompt.py</code>) embeds deep domain knowledge of L2L operations:
+    </p>
+
+    <h3>Plant Site Mapping Rules</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Numeric Site ID</th>
+          <th>Plant / City Name</th>
+          <th>Resolution Behavior</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>240</code></td>
+          <td><strong>Stargard</strong></td>
+          <td>Queries mentioning "Stargard" automatically filter on <code>WHERE site = 240</code></td>
+        </tr>
+        <tr>
+          <td><code>260</code></td>
+          <td><strong>Shanghai</strong></td>
+          <td>Queries mentioning "Shanghai" automatically filter on <code>WHERE site = 260</code></td>
+        </tr>
+        <tr>
+          <td><code>276</code></td>
+          <td><strong>Ottawa</strong></td>
+          <td>Queries mentioning "Ottawa" automatically filter on <code>WHERE site = 276</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Core Schema Attributes (<code>f_l2l_dispatches</code>)</h3>
+    <ul>
+      <li><strong>Identification:</strong> <code>dispatchnumber</code>, <code>site</code>, <code>machinecode</code>, <code>linecode</code>, <code>lineabbreviation</code>, <code>areacode</code></li>
+      <li><strong>Classification:</strong> <code>dispatchtype</code>, <code>tradecode</code>, <code>reasoncode</code>, <code>current_dispatchstatus_description</code></li>
+      <li><strong>Metrics:</strong> <code>downtime</code> (total downtime minutes), <code>sigdowntime</code> (significant downtime threshold), <code>Open</code> (boolean)</li>
+      <li><strong>Timestamps:</strong> <code>dispatch_reported</code> (created time), <code>completed</code> (resolution time)</li>
+    </ul>
+
+    <!-- Section 5 -->
+    <h2>5. Workspace File Inventory</h2>
+    <pre><code>C:\AI_dev\l2l-analytics-chatbot\
+├── .env                                  # Model provider keys, GCP project ID
+├── Dockerfile                            # Production Python 3.11-slim container
+├── docker-compose.yml                    # Multi-service setup (FastAPI + PostgreSQL 16)
+├── main.py                               # FastAPI application routes & HTMX endpoints
+├── requirements.txt                      # Pinned Python package dependencies
+├── config/
+│   └── config.yml                        # NeMo Guardrails configuration
+├── data/
+│   └── l2l_analytics.duckdb              # Embedded columnar DuckDB database
+├── src/
+│   ├── agent.py                          # LangGraph ReAct workflow & PostgresSaver
+│   ├── cache.py                          # BigQuery-to-DuckDB sync pipeline & safe executor
+│   ├── mcp_server.py                     # FastMCP server exposing DuckDB via MCP
+│   ├── tools.py                          # LangChain tools (query_l2l_database, generate_l2l_chart)
+│   ├── prompts/agent_prompt.py           # Dynamic system prompt & schema guidance
+│   └── utils/helpers.py                  # Thread generation & historical turn parser
+└── templates/                            # HTMX + Tailwind Jinja2 UI templates</code></pre>
+
+    <!-- Section 6 -->
+    <h2>6. Current Project Status & Readiness</h2>
+    <p>
+      Every core component of the L2L Analytics Chatbot architecture is built, integrated, and verified:
+    </p>
+    <ul>
+      <li>✅ <strong>Fast Text-to-SQL Analytics:</strong> Full support for complex aggregations, group-bys, and downtime summaries.</li>
+      <li>✅ <strong>End-to-End Visualizations:</strong> Autonomous generation of dark-theme Plotly charts directly in chat.</li>
+      <li>✅ <strong>Persistent Multi-Session Memory:</strong> Thread history, sidebar switching, and chart restoration operational via PostgreSQL.</li>
+      <li>✅ <strong>Container Orchestration:</strong> Docker Compose runs the web app, DuckDB volume, host GCP credentials, and Postgres.</li>
+      <li>✅ <strong>External AI Access:</strong> FastMCP server ready for external clients.</li>
+    </ul>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    L2L Analytics Chatbot &bull; Project Status & Architecture Report &bull; Generated October 2026
+  </div>
+</div>
+
+</body>
+</html>

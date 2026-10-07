@@ -1,0 +1,53 @@
+<!-- User Question Bubble -->
+<div class="flex justify-end mb-4">
+    <div class="bg-blue-600 text-white px-4 py-2 rounded-lg max-w-xl text-sm shadow">
+        {{ user_message }}
+    </div>
+</div>
+
+<!-- Bot Response Bubble -->
+<div class="flex justify-start mb-4 w-full">
+    <div class="bg-gray-800 border border-gray-700 text-gray-100 px-4 py-3 rounded-lg max-w-2xl text-sm shadow w-full">
+        <!-- Render Bot Text -->
+        {% if bot_response %}
+        <div class="bot-text-content space-y-2 prose prose-invert max-w-none">
+            {{ bot_response | safe }}
+        </div>
+        {% endif %}
+        
+        <!-- Target Canvas for Plotly -->
+        <div id="chart-canvas-{{ range(1, 100000) | random }}" class="mt-3 w-full"></div>
+    </div>
+</div>
+
+<!-- Render Plotly Chart directly if plotly_json exists -->
+{% if plotly_json %}
+<script>
+    (function() {
+        try {
+            const figure = {{ plotly_json | safe }};
+            const containers = document.querySelectorAll('[id^="chart-canvas-"]');
+            const targetContainer = containers[containers.length - 1];
+            
+            if (targetContainer && figure) {
+                Plotly.newPlot(targetContainer, figure.data, figure.layout, { responsive: true });
+            }
+        } catch (e) {
+            console.error("Error rendering Plotly chart:", e);
+        }
+    })();
+</script>
+{% endif %}
+
+<!-- ================================================================= -->
+<!-- HTMX OUT-OF-BAND (OOB) SWAPS                                       -->
+<!-- ================================================================= -->
+
+<!-- 1. Update the hidden thread_id input field and header title in the active chat form -->
+{% if active_thread_id %}
+<input type="hidden" name="thread_id" value="{{ active_thread_id }}" id="active-thread-id-input" hx-swap-oob="outerHTML" />
+<span id="chat-header-title" class="font-medium text-gray-200 truncate max-w-lg" hx-swap-oob="outerHTML">
+    💬 {{ active_thread_id }}
+</span>
+{% endif %}
+

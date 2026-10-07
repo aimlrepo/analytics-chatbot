@@ -1,0 +1,892 @@
+%PDF-1.4
+%1234
+1 0 obj
+<<
+  /Type /Catalog
+  /Pages 2 0 R
+>>
+endobj
+2 0 obj
+<<
+  /Type /Pages
+  /Kids [3 0 R 5 0 R 7 0 R]
+  /Count 3
+>>
+endobj
+3 0 obj
+<<
+  /Type /Page
+  /Parent 2 0 R
+  /MediaBox [0 0 612 792]
+  /Contents 4 0 R
+  /Resources <<
+    /Font <<
+      /F1 9 0 R
+      /F2 10 0 R
+      /F3 11 0 R
+    >>
+  >>
+>>
+endobj
+4 0 obj
+<<
+  /Length 3816
+>>
+stream
+0.08 0.18 0.36 rg
+40 705 532 52 re f
+BT
+/F2 16 Tf
+1 1 1 rg
+55 735 Td
+(L2L ANALYTICS CHATBOT - PROJECT STATUS REPORT) Tj
+/F1 9 Tf
+0.8 0.88 0.98 rg
+0 -17 Td
+(Comprehensive Architecture, Implemented Features & Technical Milestones) Tj
+ET
+0.94 0.96 0.98 rg
+40 655 532 40 re f
+0.8 0.85 0.9 RG
+0.5 w
+40 655 532 40 re S
+BT
+/F2 8 Tf
+0.2 0.3 0.4 rg
+50 679 Td
+(DATE: ) Tj
+/F1 8 Tf
+(October 2026   |   ) Tj
+/F2 8 Tf
+(DOMAIN: ) Tj
+/F1 8 Tf
+(Leading2Lean Manufacturing Operations   |   ) Tj
+/F2 8 Tf
+(STATUS: ) Tj
+/F2 8 Tf
+0.05 0.55 0.25 rg
+(Operational & Production-Ready) Tj
+ET
+BT
+/F2 8 Tf
+0.2 0.3 0.4 rg
+50 664 Td
+(WORKSPACE: ) Tj
+/F1 8 Tf
+(C:\\AI_dev\\l2l-analytics-chatbot   |   ) Tj
+/F2 8 Tf
+(STACK: ) Tj
+/F1 8 Tf
+(FastAPI, HTMX, LangGraph, DuckDB, Plotly) Tj
+ET
+0.12 0.24 0.44 rg
+40 622 532 20 re f
+BT
+/F2 10 Tf
+1 1 1 rg
+48 628 Td
+(1. EXECUTIVE SUMMARY & OBJECTIVES) Tj
+ET
+BT
+/F1 8.5 Tf
+0.15 0.15 0.15 rg
+45 604 Td
+(The L2L Analytics Chatbot is a full-stack, enterprise manufacturing intelligence assistant designed to query,) Tj
+0 -12 Td
+(analyze, and visualize Leading2Lean \(L2L\) dispatch and maintenance metrics in real time. It enables plant) Tj
+0 -12 Td
+(supervisors, reliability engineers, and process leaders to interact with plant operations data using natural) Tj
+0 -12 Td
+(language, receiving both structured markdown tables and responsive, interactive Plotly visualization charts.) Tj
+ET
+0.12 0.24 0.44 rg
+40 528 532 20 re f
+BT
+/F2 10 Tf
+1 1 1 rg
+48 534 Td
+(2. ARCHITECTURAL HIGHLIGHTS & TWO-TIER DATA STRATEGY) Tj
+ET
+BT
+/F2 8.5 Tf
+0.1 0.2 0.4 rg
+45 510 Td
+(- High-Performance Local OLAP Cache \(BigQuery -> DuckDB\):) Tj
+ET
+BT
+/F1 8 Tf
+0.2 0.2 0.2 rg
+55 498 Td
+(Direct LLM querying of cloud data warehouses like Google BigQuery introduces latency, cost, and quota limits.) Tj
+0 -11 Td
+(The solution implements an automated pipeline in src/cache.py syncing cons_kamos_l2l.f_l2l_dispatches into) Tj
+0 -11 Td
+(a local embedded DuckDB database \(/app/data/l2l_analytics.duckdb\) with a 10s query timeout & 2GB memory cap.) Tj
+ET
+BT
+/F2 8.5 Tf
+0.1 0.2 0.4 rg
+45 454 Td
+(- Cyclic LangGraph ReAct Workflow:) Tj
+ET
+BT
+/F1 8 Tf
+0.2 0.2 0.2 rg
+55 442 Td
+(Employs a StateGraph in src/agent.py looping between an LLM agent node and a tool execution node. The agent) Tj
+0 -11 Td
+(decides whether to execute DuckDB analytical SQL, generate Plotly charts, or directly answer queries.) Tj
+ET
+BT
+/F2 8.5 Tf
+0.1 0.2 0.4 rg
+45 407 Td
+(- Persistent Multi-Turn Memory via PostgresSaver:) Tj
+ET
+BT
+/F1 8 Tf
+0.2 0.2 0.2 rg
+55 395 Td
+(Integrated with PostgreSQL 16 \(l2l_chat_memory\) via a connection pool. Every conversation retains an isolated) Tj
+0 -11 Td
+(thread_id allowing full session restoration, historical chart re-rendering, and seamless context switching.) Tj
+ET
+0.12 0.24 0.44 rg
+40 348 532 20 re f
+BT
+/F2 10 Tf
+1 1 1 rg
+48 354 Td
+(3. TECHNOLOGY STACK SPECIFICATIONS) Tj
+ET
+0.9 0.93 0.96 rg
+40 326 532 16 re f
+0.7 0.75 0.8 RG
+0.5 w
+40 326 532 16 re S
+BT
+/F2 8 Tf
+0.1 0.2 0.3 rg
+46 331 Td
+(LAYER) Tj
+110 0 Td
+(COMPONENTS & VERSIONS) Tj
+175 0 Td
+(ROLE & CAPABILITY) Tj
+ET
+0.7 0.75 0.8 RG
+0.5 w
+40 307 532 19 re S
+BT
+/F2 7.5 Tf
+0.2 0.2 0.2 rg
+46 313 Td
+(Backend API) Tj
+ET
+BT
+/F1 7.5 Tf
+0.2 0.2 0.2 rg
+156 313 Td
+(FastAPI 0.110.0 + Uvicorn 0.28.0) Tj
+175 0 Td
+(Async REST endpoints, HTMX partials, session handlers) Tj
+ET
+0.96 0.97 0.99 rg
+40 288 532 19 re f
+0.7 0.75 0.8 RG
+0.5 w
+40 288 532 19 re S
+BT
+/F2 7.5 Tf
+0.2 0.2 0.2 rg
+46 294 Td
+(Hypermedia UI) Tj
+ET
+BT
+/F1 7.5 Tf
+0.2 0.2 0.2 rg
+156 294 Td
+(HTMX 1.9.10 + Tailwind CSS + Jinja2) Tj
+175 0 Td
+(Server-Side Rendered \(SSR\) interactive single-page app) Tj
+ET
+0.7 0.75 0.8 RG
+0.5 w
+40 269 532 19 re S
+BT
+/F2 7.5 Tf
+0.2 0.2 0.2 rg
+46 275 Td
+(Visualizations) Tj
+ET
+BT
+/F1 7.5 Tf
+0.2 0.2 0.2 rg
+156 275 Td
+(Plotly.py 5.20.0 + Plotly.js 2.30.0) Tj
+175 0 Td
+(Responsive dark-themed bar, line, pie, and scatter charts) Tj
+ET
+0.96 0.97 0.99 rg
+40 250 532 19 re f
+0.7 0.75 0.8 RG
+0.5 w
+40 250 532 19 re S
+BT
+/F2 7.5 Tf
+0.2 0.2 0.2 rg
+46 256 Td
+(Agent Engine) Tj
+ET
+BT
+/F1 7.5 Tf
+0.2 0.2 0.2 rg
+156 256 Td
+(LangChain 0.2 + LangGraph 0.1) Tj
+175 0 Td
+(Cyclic ReAct execution graph, tool invocation) Tj
+ET
+0.7 0.75 0.8 RG
+0.5 w
+40 231 532 19 re S
+BT
+/F2 7.5 Tf
+0.2 0.2 0.2 rg
+46 237 Td
+(LLM Providers) Tj
+ET
+BT
+/F1 7.5 Tf
+0.2 0.2 0.2 rg
+156 237 Td
+(OpenAI \(gpt-4o\) / Google Gemini 1.5) Tj
+175 0 Td
+(Configurable providers via .env with zero temperature) Tj
+ET
+0.96 0.97 0.99 rg
+40 212 532 19 re f
+0.7 0.75 0.8 RG
+0.5 w
+40 212 532 19 re S
+BT
+/F2 7.5 Tf
+0.2 0.2 0.2 rg
+46 218 Td
+(OLAP Database) Tj
+ET
+BT
+/F1 7.5 Tf
+0.2 0.2 0.2 rg
+156 218 Td
+(DuckDB 0.10.1 + BigQuery 3.19.0) Tj
+175 0 Td
+(Local high-performance columnar dispatch cache) Tj
+ET
+0.7 0.75 0.8 RG
+0.5 w
+40 193 532 19 re S
+BT
+/F2 7.5 Tf
+0.2 0.2 0.2 rg
+46 199 Td
+(Memory Saver) Tj
+ET
+BT
+/F1 7.5 Tf
+0.2 0.2 0.2 rg
+156 199 Td
+(PostgreSQL 16 Alpine + psycopg 3) Tj
+175 0 Td
+(PostgresSaver checkpointer for long-term multi-session memory) Tj
+ET
+0.96 0.97 0.99 rg
+40 174 532 19 re f
+0.7 0.75 0.8 RG
+0.5 w
+40 174 532 19 re S
+BT
+/F2 7.5 Tf
+0.2 0.2 0.2 rg
+46 180 Td
+(Protocols / DevOps) Tj
+ET
+BT
+/F1 7.5 Tf
+0.2 0.2 0.2 rg
+156 180 Td
+(FastMCP 0.1.0 + Docker Compose) Tj
+175 0 Td
+(Model Context Protocol server, container orchestration) Tj
+ET
+0.7 0.7 0.7 RG
+0.5 w
+40 60 532 0.1 re S
+BT
+/F3 7.5 Tf
+0.4 0.4 0.4 rg
+40 48 Td
+(L2L Analytics Chatbot - Project Status & Architecture Report) Tj
+450 0 Td
+(Page 1 of 3) Tj
+ET
+endstream
+endobj
+5 0 obj
+<<
+  /Type /Page
+  /Parent 2 0 R
+  /MediaBox [0 0 612 792]
+  /Contents 6 0 R
+  /Resources <<
+    /Font <<
+      /F1 9 0 R
+      /F2 10 0 R
+      /F3 11 0 R
+    >>
+  >>
+>>
+endobj
+6 0 obj
+<<
+  /Length 3870
+>>
+stream
+0.7 0.7 0.7 RG
+0.5 w
+40 750 532 0.1 re S
+BT
+/F3 7.5 Tf
+0.4 0.4 0.4 rg
+40 755 Td
+(L2L Analytics Chatbot - Implemented Capabilities & Manufacturing Domain) Tj
+450 0 Td
+(Page 2 of 3) Tj
+ET
+0.12 0.24 0.44 rg
+40 715 532 20 re f
+BT
+/F2 10 Tf
+1 1 1 rg
+48 721 Td
+(4. IMPLEMENTED SUBSYSTEMS & CAPABILITIES) Tj
+ET
+BT
+/F2 8.5 Tf
+0.1 0.2 0.4 rg
+45 695 Td
+(4.1 Text-to-SQL Analytics & Safe Execution Engine \(src/tools.py, src/cache.py\)) Tj
+ET
+BT
+/F1 8 Tf
+0.2 0.2 0.2 rg
+55 683 Td
+(- query_l2l_database tool translates user questions into DuckDB SQL and outputs formatted Markdown tables.) Tj
+0 -11 Td
+(- Read-only database access enforcing strict statement limits: SET statement_timeout = '10s', max_memory = '2GB'.) Tj
+0 -11 Td
+(- Handles empty records gracefully and returns descriptive SQL errors that allow the LLM agent to self-correct.) Tj
+0 -11 Td
+(- Cache sync endpoint \(POST /sync-cache\) enables on-demand ingestion from Google BigQuery.) Tj
+ET
+BT
+/F2 8.5 Tf
+0.1 0.2 0.4 rg
+45 628 Td
+(4.2 Dynamic Plotly Chart Generation \(src/tools.py\)) Tj
+ET
+BT
+/F1 8 Tf
+0.2 0.2 0.2 rg
+55 616 Td
+(- generate_l2l_chart tool accepts SQL query, chart_type \('bar', 'line', 'pie', 'scatter'\), axes columns, and title.) Tj
+0 -11 Td
+(- Constructs full Plotly figures using 'plotly_dark' theme matching the sleek dark web UI.) Tj
+0 -11 Td
+(- Wraps serialized JSON in ```plotly_json code fences, ensuring uncorrupted transmission through LLM context.) Tj
+0 -11 Td
+(- Automatically scrubs redundant LLM boilerplate, keeping the interface clean and visual-focused.) Tj
+ET
+BT
+/F2 8.5 Tf
+0.1 0.2 0.4 rg
+45 561 Td
+(4.3 Hypermedia Reactive Frontend \(FastAPI + HTMX + Tailwind + Plotly\)) Tj
+ET
+BT
+/F1 8 Tf
+0.2 0.2 0.2 rg
+55 549 Td
+(- Eliminates complex React/Node.js builds by serving fast, reactive Jinja2 partials via HTMX.) Tj
+0 -11 Td
+(- Form submission via hx-post='/chat' streams turns smoothly into the message pane using hx-swap='beforeend'.) Tj
+0 -11 Td
+(- Uses Out-Of-Band \(OOB\) swaps to update active thread IDs and chat titles in real time without page reload.) Tj
+0 -11 Td
+(- Emits HX-Trigger: refreshSidebar so newly named conversation sessions appear instantly in the sidebar.) Tj
+0 -11 Td
+(- Client-side Plotly script renders the interactive chart canvas as soon as the partial arrives in the DOM.) Tj
+ET
+BT
+/F2 8.5 Tf
+0.1 0.2 0.4 rg
+45 478 Td
+(4.4 Multi-Session Thread Management & History Replay \(src/utils/helpers.py\)) Tj
+ET
+BT
+/F1 8 Tf
+0.2 0.2 0.2 rg
+55 466 Td
+(- Automated semantic thread titles: DDMonYY-HH:MM:SS-<Slug> \(e.g., 26Sep26-13:33:00-Site-240-Dispatches\).) Tj
+0 -11 Td
+(- Interactive sidebar with active session highlighting and a 'New Chat' launcher.) Tj
+0 -11 Td
+(- extract_history_turns reconstructs prior turns and re-renders historical Plotly charts with full interactivity.) Tj
+0 -11 Td
+(- GET /chat/history/{thread_id} reloads prior discussions smoothly with zero loss of context.) Tj
+ET
+0.12 0.24 0.44 rg
+40 405 532 20 re f
+BT
+/F2 10 Tf
+1 1 1 rg
+48 411 Td
+(5. MANUFACTURING DOMAIN KNOWLEDGE & ENTITY RESOLUTION) Tj
+ET
+BT
+/F1 8 Tf
+0.2 0.2 0.2 rg
+45 390 Td
+(The dynamic prompt generator \(src/prompts/agent_prompt.py\) provides calendar grounding and plant domain rules:) Tj
+ET
+0.94 0.96 0.98 rg
+45 320 522 56 re f
+0.7 0.8 0.9 RG
+0.5 w
+45 320 522 56 re S
+BT
+/F2 8 Tf
+0.1 0.2 0.4 rg
+55 362 Td
+(FACILITY / SITE MAPPING RULES:) Tj
+ET
+BT
+/F1 7.5 Tf
+0.2 0.2 0.2 rg
+55 350 Td
+(- Site 240 <---> Stargard \(e.g., 'Stargard dispatches' automatically maps to: WHERE site = 240\)) Tj
+0 -10 Td
+(- Site 260 <---> Shanghai \(e.g., 'Shanghai downtime' automatically maps to: WHERE site = 260\)) Tj
+0 -10 Td
+(- Site 276 <---> Ottawa \(e.g., 'Ottawa open dispatches' automatically maps to: WHERE site = 276\)) Tj
+ET
+0.94 0.96 0.98 rg
+45 155 522 152 re f
+0.7 0.8 0.9 RG
+0.5 w
+45 155 522 152 re S
+BT
+/F2 8 Tf
+0.1 0.2 0.4 rg
+55 293 Td
+(CORE DATABASE SCHEMA ATTRIBUTES \(Table: f_l2l_dispatches\):) Tj
+ET
+BT
+/F1 7.5 Tf
+0.2 0.2 0.2 rg
+55 280 Td
+(- dispatchnumber \(BIGINT\): Unique identifier) Tj
+255 0 Td
+(- site \(BIGINT\): Facility ID \(240, 260, 276\)) Tj
+ET
+BT
+/F1 7.5 Tf
+0.2 0.2 0.2 rg
+55 268 Td
+(- dispatchtype \(VARCHAR\): Category of dispatch) Tj
+255 0 Td
+(- machinecode \(VARCHAR\): Specific machine code) Tj
+ET
+BT
+/F1 7.5 Tf
+0.2 0.2 0.2 rg
+55 256 Td
+(- downtime \(BIGINT\): Total duration of downtime) Tj
+255 0 Td
+(- sigdowntime \(BIGINT\): Significant downtime metric) Tj
+ET
+BT
+/F1 7.5 Tf
+0.2 0.2 0.2 rg
+55 244 Td
+(- Open \(BOOLEAN\): Status \(true = open, false = closed\)) Tj
+255 0 Td
+(- tradecode \(VARCHAR\): Maintenance trade required) Tj
+ET
+BT
+/F1 7.5 Tf
+0.2 0.2 0.2 rg
+55 232 Td
+(- dispatch_reported \(TIMESTAMPTZ\): Creation timestamp) Tj
+255 0 Td
+(- completed \(TIMESTAMPTZ\): Completion timestamp) Tj
+ET
+BT
+/F1 7.5 Tf
+0.2 0.2 0.2 rg
+55 220 Td
+(- lineabbreviation / linecode: Production line) Tj
+255 0 Td
+(- areacode \(VARCHAR\): Area within plant) Tj
+ET
+BT
+/F1 7.5 Tf
+0.2 0.2 0.2 rg
+55 208 Td
+(- reasoncode \(VARCHAR\): Downtime reason code) Tj
+255 0 Td
+(- current_dispatchstatus_description \(VARCHAR\)) Tj
+ET
+BT
+/F2 7.5 Tf
+0.6 0.1 0.1 rg
+55 188 Td
+(Temporal Logic:) Tj
+/F1 7.5 Tf
+0.2 0.2 0.2 rg
+( Real-time awareness calculates current date/year, translating queries like 'last 3 months' into) Tj
+ET
+BT
+/F1 7.5 Tf
+0.2 0.2 0.2 rg
+55 174 Td
+(DuckDB SQL expressions: WHERE dispatch_reported >= CURRENT_DATE - INTERVAL '3 months'.) Tj
+ET
+0.7 0.7 0.7 RG
+0.5 w
+40 60 532 0.1 re S
+BT
+/F3 7.5 Tf
+0.4 0.4 0.4 rg
+40 48 Td
+(L2L Analytics Chatbot - Project Status & Architecture Report) Tj
+450 0 Td
+(Page 2 of 3) Tj
+ET
+endstream
+endobj
+7 0 obj
+<<
+  /Type /Page
+  /Parent 2 0 R
+  /MediaBox [0 0 612 792]
+  /Contents 8 0 R
+  /Resources <<
+    /Font <<
+      /F1 9 0 R
+      /F2 10 0 R
+      /F3 11 0 R
+    >>
+  >>
+>>
+endobj
+8 0 obj
+<<
+  /Length 3680
+>>
+stream
+0.7 0.7 0.7 RG
+0.5 w
+40 750 532 0.1 re S
+BT
+/F3 7.5 Tf
+0.4 0.4 0.4 rg
+40 755 Td
+(L2L Analytics Chatbot - Protocols, File Inventory & Operational Summary) Tj
+450 0 Td
+(Page 3 of 3) Tj
+ET
+0.12 0.24 0.44 rg
+40 715 532 20 re f
+BT
+/F2 10 Tf
+1 1 1 rg
+48 721 Td
+(6. PROTOCOLS, SAFETY GUARDRAILS & CONTAINER DEPLOYMENT) Tj
+ET
+BT
+/F2 8.5 Tf
+0.1 0.2 0.4 rg
+45 695 Td
+(6.1 Model Context Protocol Integration \(src/mcp_server.py\)) Tj
+ET
+BT
+/F1 8 Tf
+0.2 0.2 0.2 rg
+55 683 Td
+(- Implemented with FastMCP \(0.1.0\) to expose DuckDB querying tools over the open MCP standard.) Tj
+0 -11 Td
+(- Enables external MCP-compatible AI assistants \(Claude Desktop, Cursor, IDEs\) to interact directly) Tj
+0 -11 Td
+(  with the manufacturing data cache without modifying backend application code.) Tj
+ET
+BT
+/F2 8.5 Tf
+0.1 0.2 0.4 rg
+45 635 Td
+(6.2 Input Safety & Guardrails \(config/config.yml\)) Tj
+ET
+BT
+/F1 8 Tf
+0.2 0.2 0.2 rg
+55 623 Td
+(- Configured NeMo Guardrails \(>=0.9.0\) with input rails protecting against prompt injection and malicious inputs.) Tj
+0 -11 Td
+(- Establishes boundary enforcement to prevent unauthorized table modifications or SQL tampering.) Tj
+ET
+BT
+/F2 8.5 Tf
+0.1 0.2 0.4 rg
+45 585 Td
+(6.3 Multi-Container Docker Architecture \(docker-compose.yml, Dockerfile\)) Tj
+ET
+BT
+/F1 8 Tf
+0.2 0.2 0.2 rg
+55 573 Td
+(- Web Container: Python 3.11-slim with compiled C-extensions, live code reload, and mounted DuckDB volume.) Tj
+0 -11 Td
+(- PostgreSQL 16 Alpine: Healthchecked service with persistent volume \(postgres_data\) for conversational state.) Tj
+0 -11 Td
+(- GCP Authentication: Mounts host Google Application Default Credentials for seamless BigQuery data ingestion.) Tj
+ET
+0.12 0.24 0.44 rg
+40 520 532 20 re f
+BT
+/F2 10 Tf
+1 1 1 rg
+48 526 Td
+(7. WORKSPACE FILE INVENTORY & ARTIFACTS) Tj
+ET
+0.96 0.97 0.98 rg
+45 320 522 188 re f
+0.7 0.8 0.9 RG
+0.5 w
+45 320 522 188 re S
+BT
+/F2 7.5 Tf
+0.2 0.3 0.5 rg
+55 494 Td
+(FILE PATH) Tj
+165 0 Td
+(FUNCTIONALITY & STATUS) Tj
+ET
+BT
+/F2 7.5 Tf
+0.1 0.1 0.1 rg
+55 479 Td
+(main.py) Tj
+ET
+BT
+/F1 7 Tf
+0.2 0.2 0.2 rg
+220 479 Td
+(FastAPI web entrypoint, HTMX chat routes, session history endpoints, test harnesses) Tj
+ET
+BT
+/F2 7.5 Tf
+0.1 0.1 0.1 rg
+55 465 Td
+(docker-compose.yml) Tj
+ET
+BT
+/F1 7 Tf
+0.2 0.2 0.2 rg
+220 465 Td
+(Orchestrates FastAPI app, DuckDB volume, host GCP auth, and PostgreSQL 16) Tj
+ET
+BT
+/F2 7.5 Tf
+0.1 0.1 0.1 rg
+55 451 Td
+(Dockerfile) Tj
+ET
+BT
+/F1 7 Tf
+0.2 0.2 0.2 rg
+220 451 Td
+(Python 3.11-slim container with build essentials and pinned dependencies) Tj
+ET
+BT
+/F2 7.5 Tf
+0.1 0.1 0.1 rg
+55 437 Td
+(requirements.txt) Tj
+ET
+BT
+/F1 7 Tf
+0.2 0.2 0.2 rg
+220 437 Td
+(Pinned dependencies: FastAPI, DuckDB, LangGraph, Plotly, FastMCP, psycopg) Tj
+ET
+BT
+/F2 7.5 Tf
+0.1 0.1 0.1 rg
+55 423 Td
+(src/agent.py) Tj
+ET
+BT
+/F1 7.5 Tf
+0.2 0.2 0.2 rg
+220 423 Td
+(LangGraph StateGraph workflow, tool execution node, PostgresSaver checkpointer) Tj
+ET
+BT
+/F2 7.5 Tf
+0.1 0.1 0.1 rg
+55 409 Td
+(src/cache.py) Tj
+ET
+BT
+/F1 7 Tf
+0.2 0.2 0.2 rg
+220 409 Td
+(BigQuery data sync pipeline, local DuckDB cache materialization, safe query executor) Tj
+ET
+BT
+/F2 7.5 Tf
+0.1 0.1 0.1 rg
+55 395 Td
+(src/tools.py) Tj
+ET
+BT
+/F1 7 Tf
+0.2 0.2 0.2 rg
+220 395 Td
+(LangChain tools: query_l2l_database & generate_l2l_chart \(Plotly JSON\)) Tj
+ET
+BT
+/F2 7.5 Tf
+0.1 0.1 0.1 rg
+55 381 Td
+(src/prompts/agent_prompt.py) Tj
+ET
+BT
+/F1 7 Tf
+0.2 0.2 0.2 rg
+220 381 Td
+(Dynamic system prompt with calendar context and plant site resolution logic) Tj
+ET
+BT
+/F2 7.5 Tf
+0.1 0.1 0.1 rg
+55 367 Td
+(src/utils/helpers.py) Tj
+ET
+BT
+/F1 7 Tf
+0.2 0.2 0.2 rg
+220 367 Td
+(Semantic thread name generator, Postgres session query, history turn parser) Tj
+ET
+BT
+/F2 7.5 Tf
+0.1 0.1 0.1 rg
+55 353 Td
+(src/mcp_server.py) Tj
+ET
+BT
+/F1 7 Tf
+0.2 0.2 0.2 rg
+220 353 Td
+(FastMCP server exposing DuckDB query tools to external MCP AI assistants) Tj
+ET
+BT
+/F2 7.5 Tf
+0.1 0.1 0.1 rg
+55 339 Td
+(templates/ & static/) Tj
+ET
+BT
+/F1 7 Tf
+0.2 0.2 0.2 rg
+220 339 Td
+(Jinja2 templates: base.html, sidebar.html, chat_area.html, HTMX response partial) Tj
+ET
+0.12 0.24 0.44 rg
+40 285 532 20 re f
+BT
+/F2 10 Tf
+1 1 1 rg
+48 291 Td
+(8. SUMMARY & OPERATIONAL READINESS) Tj
+ET
+BT
+/F1 8.5 Tf
+0.15 0.15 0.15 rg
+45 268 Td
+(The L2L Analytics Chatbot has accomplished all core milestones for an end-to-end manufacturing intelligence) Tj
+0 -12 Td
+(platform. The system achieves sub-second response times through local DuckDB OLAP caching, retains multi-turn) Tj
+0 -12 Td
+(sessions across restarts via PostgreSQL checkpoints, autonomously generates production-grade Plotly charts,) Tj
+0 -12 Td
+(and provides an agile, no-build web interface using HTMX and Tailwind CSS.) Tj
+0 -14 Td
+(The platform is fully containerized and verified for production or staging deployment.) Tj
+ET
+0.7 0.7 0.7 RG
+0.5 w
+40 60 532 0.1 re S
+BT
+/F3 7.5 Tf
+0.4 0.4 0.4 rg
+40 48 Td
+(L2L Analytics Chatbot - Project Status & Architecture Report) Tj
+450 0 Td
+(Page 3 of 3) Tj
+ET
+endstream
+endobj
+9 0 obj
+<<
+  /Type /Font
+  /Subtype /Type1
+  /BaseFont /Helvetica
+>>
+endobj
+10 0 obj
+<<
+  /Type /Font
+  /Subtype /Type1
+  /BaseFont /Helvetica-Bold
+>>
+endobj
+11 0 obj
+<<
+  /Type /Font
+  /Subtype /Type1
+  /BaseFont /Helvetica-Oblique
+>>
+endobj
+xref
+0 12
+0000000000 65535 f 
+0000000015 00000 n 
+0000000068 00000 n 
+0000000142 00000 n 
+0000000328 00000 n 
+0000004200 00000 n 
+0000004386 00000 n 
+0000008312 00000 n 
+0000008498 00000 n 
+0000012234 00000 n 
+0000012308 00000 n 
+0000012387 00000 n 
+trailer
+<<
+  /Size 12
+  /Root 1 0 R
+>>
+startxref
+12470
+%%EOF

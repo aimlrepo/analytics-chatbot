@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L2L Analytics Assistant</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    
+    <!-- Plotly.js Engine for Client-Side Chart Rendering -->
+    <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 h-screen flex overflow-hidden">
+
+    <!-- Sidebar included directly without a duplicate wrapper element -->
+    {% include 'sidebar.html' %}
+
+    <!-- Main Chat Workspace -->
+    <main id="chat-workspace" class="flex-1 flex flex-col h-full bg-gray-900">
+        {% include 'chat_area.html' %}
+    </main>
+
+</body>
+</html>
