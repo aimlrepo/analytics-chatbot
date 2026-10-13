@@ -28,7 +28,7 @@ def generate_thread_name(first_user_message: str = "") -> str:
 
     return f"{timestamp_prefix}-{summary_slug}"
 
-def get_all_threads():
+def get_all_threads(limit: int = 10):
     """
     Fetches unique session thread IDs from PostgreSQL checkpoints table,
     excluding legacy test entries (None, session-1, and empty strings).
@@ -41,12 +41,12 @@ def get_all_threads():
           AND thread_id NOT IN ('None', 'session-1', '')
         GROUP BY thread_id 
         ORDER BY latest_cp DESC 
-        LIMIT 20;
+        LIMIT %s;
     """
     try:
         with psycopg.connect(DB_URI, row_factory=dict_row) as conn:
             with conn.cursor() as cur:
-                cur.execute(query)
+                cur.execute(query, (limit,))
                 threads = cur.fetchall()
                 return threads
     except Exception as e:

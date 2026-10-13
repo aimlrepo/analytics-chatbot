@@ -27,7 +27,7 @@
             Recent Threads
         </div>
 
-        {% for thread in threads %}
+        {% for thread in threads[:10] %}
         <a 
             href="#" 
             hx-get="/chat/history/{{ thread.thread_id }}" 
