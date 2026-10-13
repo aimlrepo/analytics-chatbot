@@ -1,12 +1,14 @@
+import os
 import duckdb
 from google.cloud import bigquery
 import pandas as pd
 
 DB_FILE = "/app/data/l2l_analytics.duckdb"
 
-def sync_bigquery_to_duckdb(bq_project: str = "k-qualitytower-0001-p"):
-    print("Fetching data from BigQuery...")
-    client = bigquery.Client(project=bq_project)
+def sync_bigquery_to_duckdb(bq_project: str = None):
+    project_id = bq_project or os.getenv("GCP_PROJECT_ID", "k-qualitytower-0001-p")
+    print(f"Fetching data from BigQuery project '{project_id}'...")
+    client = bigquery.Client(project=project_id)
     
     query = """
     SELECT 
