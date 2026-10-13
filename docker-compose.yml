@@ -29,7 +29,7 @@ services:
       - POSTGRES_URL=postgresql://postgres:postgrespassword@postgres:5432/l2l_chat_memory
     volumes:
       - .:/app
-      - ./data:/app/data
+      - ./data:/mnt/duckdb
       - ${GCLOUD_CONFIG_DIR:-./gcloud}:/root/.config/gcloud:ro
     depends_on:
       postgres:

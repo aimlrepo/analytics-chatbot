@@ -4,7 +4,7 @@ import pandas as pd
 import plotly.express as px
 from langchain_core.tools import tool
 
-DUCKDB_PATH = "/app/data/l2l_analytics.duckdb"
+DUCKDB_PATH = os.getenv("DUCKDB_PATH", "/mnt/duckdb/cache.duckdb")
 
 @tool
 def query_l2l_database(sql_query: str) -> str:

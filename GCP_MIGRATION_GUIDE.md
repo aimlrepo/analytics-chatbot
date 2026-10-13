@@ -188,23 +188,23 @@ gcloud builds submit --tag europe-west1-docker.pkg.dev/<YOUR_PROJECT_ID>/l2l-rep
 
 ### Step 5: Handling the DuckDB Cache in Cloud Run
 
-DuckDB is an embedded database file stored at `/app/data/l2l_analytics.duckdb`.
+DuckDB is configured via `DUCKDB_PATH` to write to `/mnt/duckdb/cache.duckdb`. Using `/mnt/duckdb` prevents collisions with the container's `/app` working directory.
 In Cloud Run:
 * **Option 5A (In-Memory / Local Ephemeral Storage - Simplest)**:
-  Cloud Run provides an in-memory ephemeral disk (up to instance memory limit). When a container cold-starts, it calls `/sync-cache` (or syncs on startup) to pull the latest dataset from BigQuery.
+  Cloud Run provides an in-memory ephemeral volume. When a container cold-starts, it calls `/sync-cache` (or syncs on startup) to pull the latest dataset from BigQuery.
 * **Option 5B (Cloud Storage Volume Mount - Persistent)**:
   Cloud Run supports mounting a Cloud Storage bucket as a volume using Cloud Storage FUSE.
   ```bash
   # Create a bucket for the DuckDB file
   gcloud storage buckets create gs://<YOUR_PROJECT_ID>-l2l-cache --location=europe-west1
   ```
-  Mount it to `/app/data` at deployment time.
+  Mount it to `/mnt/duckdb` at deployment time.
 
 ---
 
 ### Step 6: Deploy Application to Cloud Run
 
-Deploy the service, linking the Cloud SQL instance, environment variables, secrets, and minimum instances:
+Deploy the service, linking the Cloud SQL instance, environment variables, secrets, and volume mount:
 
 ```bash
 gcloud run deploy l2l-analytics-app \
@@ -224,6 +224,7 @@ MODEL_PROVIDER=openai,\
 OPENAI_MODEL=gpt-4o,\
 GEMINI_MODEL=gemini-1.5-pro,\
 GCP_PROJECT_ID=<YOUR_PROJECT_ID>,\
+DUCKDB_PATH=/mnt/duckdb/cache.duckdb,\
 POSTGRES_URL=postgresql://postgres:REPLACE_WITH_SECRET@/l2l_chat_memory?host=/cloudsql/<YOUR_PROJECT_ID>:europe-west1:l2l-chat-postgres" \
     --set-secrets="\
 OPENAI_API_KEY=OPENAI_API_KEY:latest,\

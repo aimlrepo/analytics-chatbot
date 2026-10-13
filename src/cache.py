@@ -3,7 +3,7 @@ import duckdb
 from google.cloud import bigquery
 import pandas as pd
 
-DB_FILE = "/app/data/l2l_analytics.duckdb"
+DB_FILE = os.getenv("DUCKDB_PATH", "/mnt/duckdb/cache.duckdb")
 
 def sync_bigquery_to_duckdb(bq_project: str = None):
     project_id = bq_project or os.getenv("GCP_PROJECT_ID", "k-qualitytower-0001-p")
@@ -24,6 +24,7 @@ def sync_bigquery_to_duckdb(bq_project: str = None):
     df['completed'] = pd.to_datetime(df['completed'])
 
     print("Caching data into DuckDB...")
+    os.makedirs(os.path.dirname(DB_FILE), exist_ok=True)
     conn = duckdb.connect(DB_FILE)
     conn.execute("CREATE OR REPLACE TABLE f_l2l_dispatches AS SELECT * FROM df")
     conn.close()
