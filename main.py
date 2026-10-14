@@ -30,7 +30,7 @@ from fastapi.staticfiles import StaticFiles
 from langchain_core.messages import HumanMessage
 
 from src.agent import agent_app, POSTGRES_URL
-from src.cache import sync_bigquery_to_duckdb
+from src.cache_pyarrow import sync_bigquery_to_duckdb
 
 app = FastAPI(title="L2L Analytics Chatbot")
 
@@ -291,10 +291,14 @@ async def get_sidebar(
 
 @app.post("/sync-cache")
 async def sync_cache_endpoint():
-    """Triggers cache refresh from BigQuery to local DuckDB."""
+    """Triggers cache refresh from BigQuery to local DuckDB via PyArrow streaming."""
     try:
-        sync_bigquery_to_duckdb()
-        return {"status": "success", "message": "DuckDB cache synced successfully."}
+        result = sync_bigquery_to_duckdb()
+        return {
+            "status": "success",
+            "message": "DuckDB cache synced successfully via PyArrow.",
+            "details": result
+        }
     except Exception as e:
         logging.exception(f"Cache sync failed: {e}")
         raise HTTPException(status_code=500, detail=f"Cache sync failed: {str(e)}")
