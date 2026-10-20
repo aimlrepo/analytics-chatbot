@@ -8,13 +8,13 @@ def get_agent_system_prompt() -> str:
 
 ### DATABASE SCHEMA INFORMATION
 
-Table Name: `f_l2l_dispatches`
-
+Table 1: `f_l2l_dispatches`
+Maintenance and downtime dispatches aggregated across sites 240, 260, and 276.
 Columns:
-- `dispatchnumber` (BIGINT): Unique identifier for the dispatch.
+- `id` (BIGINT): Primary internal surrogate ID for the dispatch. **CRITICAL: Joins with `event_answers.dispatch`**.
+- `dispatchnumber` (BIGINT): Human-facing dispatch / ticket number.
 - `site` (BIGINT): Facility / Site ID (e.g., 240, 260, 276). **CRITICAL**: Use `site`, NOT `site_id`.
 - `dispatchtype` (VARCHAR): Type/category of dispatch.
-- `current_dispatchstatus_description` (VARCHAR): Description of current dispatch status.
 - `dispatch_reported` (TIMESTAMPTZ): Timestamp when the dispatch was created/reported.
 - `downtime` (BIGINT): Total downtime duration.
 - `completed` (TIMESTAMPTZ): Timestamp when the dispatch was completed.
@@ -26,6 +26,46 @@ Columns:
 - `areacode` (VARCHAR): Area code within the plant/facility.
 - `linecode` (VARCHAR): Production line code.
 - `reasoncode` (VARCHAR): Reason code for downtime or dispatch creation.
+
+Table 2: `event_answers`
+Stores event questions and answers (specifically Production Orders logged by PQT_API).
+Columns:
+- `id` (BIGINT): Unique identifier for the event answer.
+- `site` (BIGINT): Facility / Site ID (e.g., 240, 260, 276).
+- `question` (VARCHAR): Question prompt (e.g., "Production order #").
+- `answer` (VARCHAR): The production order value/code (e.g., "Prod 1029384", "45001234").
+- `dispatch` (BIGINT): Foreign key referencing `f_l2l_dispatches.id`.
+- `created` (TIMESTAMPTZ): Timestamp when the event answer was recorded.
+- `lastupdated` (TIMESTAMPTZ): Timestamp when last updated.
+- `createdby` (VARCHAR): Creator identifier (e.g., 'PQT_API').
+
+### TABLE RELATIONSHIP & JOIN RULES
+- **Joining Dispatches & Production Orders**:
+  `f_l2l_dispatches` and `event_answers` are linked via:
+  `f_l2l_dispatches.id = event_answers.dispatch`
+  *(Note: Do NOT join on `dispatchnumber`; `event_answers.dispatch` matches `f_l2l_dispatches.id`).*
+
+- **Production Order Queries**:
+  When users ask about "production order", "production orders", "order number", or dispatches associated with a production order:
+  1. JOIN `f_l2l_dispatches d` and `event_answers e` ON `d.id = e.dispatch`.
+  2. The production order number is stored in `e.answer`.
+  3. Filter production order values using `e.answer LIKE '%<number>%'` or `e.answer = '<number>'`.
+  
+  Example Query:
+  ```sql
+  SELECT 
+      e.answer AS production_order,
+      d.dispatchnumber,
+      d.site,
+      d.dispatchtype,
+      d.downtime,
+      d.dispatch_reported
+  FROM event_answers e
+  JOIN f_l2l_dispatches d ON e.dispatch = d.id
+  WHERE d.site = 260
+  ORDER BY d.downtime DESC
+  LIMIT 10;
+  ```
 
 ### SITE METADATA & MAPPING RULES
 The `site` column in DuckDB stores numeric values:

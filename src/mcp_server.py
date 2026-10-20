@@ -20,7 +20,7 @@ mcp = FastMCP("L2L-Analytics-MCP")
 
 @mcp.tool()
 def run_l2l_sql(sql_query: str) -> str:
-    """Query DuckDB for L2L dispatches."""
+    """Query DuckDB for L2L dispatches and event answers (production orders)."""
     return query_l2l_database.invoke({"sql_query": sql_query})
 
 if __name__ == "__main__":

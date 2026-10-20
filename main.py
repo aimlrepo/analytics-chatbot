@@ -291,12 +291,12 @@ async def get_sidebar(
 
 @app.post("/sync-cache")
 async def sync_cache_endpoint():
-    """Triggers cache refresh from BigQuery to local DuckDB via PyArrow streaming."""
+    """Triggers cache refresh from BigQuery to local DuckDB via PyArrow streaming for all data sources."""
     try:
         result = sync_bigquery_to_duckdb()
         return {
             "status": "success",
-            "message": "DuckDB cache synced successfully via PyArrow.",
+            "message": "DuckDB cache synced successfully via PyArrow for f_l2l_dispatches and event_answers.",
             "details": result
         }
     except Exception as e:

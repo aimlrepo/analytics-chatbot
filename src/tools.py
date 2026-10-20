@@ -8,7 +8,8 @@ DUCKDB_PATH = os.getenv("DUCKDB_PATH", "/mnt/duckdb/cache.duckdb")
 
 @tool
 def query_l2l_database(sql_query: str) -> str:
-    """Queries the local DuckDB database table 'f_l2l_dispatches' using DuckDB SQL.
+    """Queries the local DuckDB database tables ('f_l2l_dispatches', 'event_answers') using DuckDB SQL.
+    Supports single table queries or joins between dispatches and event_answers.
     Returns a Markdown-formatted table of the results.
     """
     if not os.path.exists(DUCKDB_PATH):
@@ -32,7 +33,7 @@ def query_l2l_database(sql_query: str) -> str:
 
 @tool
 def generate_l2l_chart(sql_query: str, chart_type: str, x_col: str, y_col: str, title: str) -> str:
-    """Queries DuckDB and returns a raw Plotly JSON string."""
+    """Queries DuckDB ('f_l2l_dispatches', 'event_answers') and returns a raw Plotly JSON string."""
     if not os.path.exists(DUCKDB_PATH):
         return "Error: Local DuckDB database file does not exist."
 
