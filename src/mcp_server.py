@@ -1,3 +1,18 @@
+import typing
+import pydantic._internal._typing_extra as _te
+
+# Compatibility shim: Pydantic removed eval_type_backport in newer releases
+if not hasattr(_te, "eval_type_backport"):
+    try:
+        from eval_type_backport import eval_type_backport as _eval_type_backport
+    except ImportError:
+        def _eval_type_backport(value, globalns=None, localns=None, type_params=None, **kwargs):
+            try:
+                return typing._eval_type(value, globalns, localns, type_params=type_params)
+            except TypeError:
+                return typing._eval_type(value, globalns, localns)
+    _te.eval_type_backport = _eval_type_backport
+
 from fastmcp import FastMCP
 from src.tools import query_l2l_database, generate_l2l_chart
 
