@@ -1,106 +1,159 @@
 import os
 import logging
-from typing import TypedDict, Annotated, Sequence
+from typing import TypedDict, Annotated, Sequence, Optional, Literal
 from dotenv import load_dotenv
+from pydantic import BaseModel, Field
 
-from langchain_core.messages import BaseMessage, SystemMessage
-from langchain_openai import ChatOpenAI
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.messages import BaseMessage, SystemMessage, AIMessage
 from langgraph.graph import StateGraph, END
 from langgraph.graph.message import add_messages
 from langgraph.checkpoint.postgres import PostgresSaver
 from psycopg_pool import ConnectionPool
 
-from src.tools import query_l2l_database, generate_l2l_chart
-from src.prompts.agent_prompt import get_agent_system_prompt
+from src.llm import get_llm
+from src.prompts.supervisor_prompt import get_supervisor_system_prompt
+from src.subgraphs.duckdb_agent import duckdb_subgraph
+from src.subgraphs.typedb_agent import typedb_subgraph
+from src.jev_router import jev_fast_router
 
 load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-# --- Model Selection ---
-MODEL_PROVIDER = os.getenv("MODEL_PROVIDER", "openai").lower()
-
-if MODEL_PROVIDER == "gemini":
-    llm = ChatGoogleGenerativeAI(
-        model=os.getenv("GEMINI_MODEL", "gemini-1.5-pro"),
-        google_api_key=os.getenv("GEMINI_API_KEY"),
-        temperature=0
-    )
-else:
-    llm = ChatOpenAI(
-        model=os.getenv("OPENAI_MODEL", "gpt-4o"),
-        api_key=os.getenv("OPENAI_API_KEY"),
-        temperature=0
-    )
-
-# Register tools with LLM
-tools = [query_l2l_database, generate_l2l_chart]
-llm_with_tools = llm.bind_tools(tools)
-
-# --- State Definition ---
-class AgentState(TypedDict):
+# --- Multi-Agent State Definition ---
+class MultiAgentState(TypedDict):
     messages: Annotated[Sequence[BaseMessage], add_messages]
+    next_agent: Optional[str]
 
-# --- Node Functions ---
-def call_model(state: AgentState):
+# --- Structured Routing Decision ---
+class SupervisorDecision(BaseModel):
+    """Routing decision made by the central supervisor agent."""
+    next_agent: Literal["duckdb_agent", "typedb_agent", "direct_response"] = Field(
+        description="Choose 'duckdb_agent' for SQL/aggregations/charts, 'typedb_agent' for causal paths/blast radius/hierarchy/fault triage, or 'direct_response' for greetings/general questions."
+    )
+    reply_content: Optional[str] = Field(
+        default=None,
+        description="Conversational response if next_agent is 'direct_response'."
+    )
+
+# Instantiate supervisor model with structured output
+supervisor_llm = get_llm(temperature=0).with_structured_output(SupervisorDecision)
+
+# --- Node 1: Supervisor Router Node ---
+def supervisor_node(state: MultiAgentState):
+    """Evaluates user intent and routes to either DuckDB agent, TypeDB agent, or answers directly."""
     messages = list(state["messages"])
+    system_prompt = SystemMessage(content=get_supervisor_system_prompt())
     
-    # Generate dynamic system prompt on each request for accurate current date/time context
-    system_prompt_content = get_agent_system_prompt()
-    system_message = SystemMessage(content=system_prompt_content)
+    # Filter past system messages to keep supervisor prompt fresh
+    prompt_messages = [system_prompt] + [m for m in messages if not isinstance(m, SystemMessage)]
     
-    # Ensure system prompt is always at the start of the message history
-    if not messages or not isinstance(messages[0], SystemMessage):
-        messages = [system_message] + messages
-    else:
-        # Update existing system prompt with fresh context
-        messages[0] = system_message
+    decision: SupervisorDecision = supervisor_llm.invoke(prompt_messages)
+    logger.info(f"[Supervisor] Routing decision: '{decision.next_agent}'")
 
-    response = llm_with_tools.invoke(messages)
-    return {"messages": [response]}
+    if decision.next_agent == "direct_response":
+        reply = decision.reply_content or "Hello! I am your L2L Manufacturing Assistant. How can I assist you with maintenance, downtime, or production analytics today?"
+        return {
+            "messages": [AIMessage(content=reply)],
+            "next_agent": "END"
+        }
 
-def should_continue(state: AgentState):
-    last_message = state["messages"][-1]
-    if hasattr(last_message, "tool_calls") and last_message.tool_calls:
-        return "tools"
+    return {"next_agent": decision.next_agent}
+
+# --- Node 2: DuckDB Specialist Subgraph Node ---
+def run_duckdb_subgraph(state: MultiAgentState):
+    """Executes the specialized DuckDB OLAP subgraph."""
+    logger.info("[Supervisor] Delegating to DuckDB Specialist Subgraph...")
+    initial_len = len(state["messages"])
+    subgraph_output = duckdb_subgraph.invoke({"messages": state["messages"]})
+    all_msgs = subgraph_output["messages"]
+    new_msgs = all_msgs[initial_len:] if len(all_msgs) > initial_len else all_msgs
+    new_msgs = [m for m in new_msgs if not isinstance(m, SystemMessage)]
+    return {"messages": new_msgs}
+
+# --- Node 3: TypeDB Specialist Subgraph Node ---
+def run_typedb_subgraph(state: MultiAgentState):
+    """Executes the specialized TypeDB Knowledge Graph subgraph."""
+    logger.info("[Supervisor] Delegating to TypeDB Specialist Subgraph...")
+    initial_len = len(state["messages"])
+    subgraph_output = typedb_subgraph.invoke({"messages": state["messages"]})
+    all_msgs = subgraph_output["messages"]
+    new_msgs = all_msgs[initial_len:] if len(all_msgs) > initial_len else all_msgs
+    new_msgs = [m for m in new_msgs if not isinstance(m, SystemMessage)]
+    return {"messages": new_msgs}
+
+# --- Node 0: Direct Conversational Node ---
+def direct_response_node(state: MultiAgentState):
+    """Immediate conversational greeting response bypassing sub-agents."""
+    reply = "Hello! I am your L2L Manufacturing Assistant. How can I assist you with maintenance, downtime, or production analytics today?"
+    return {
+        "messages": [AIMessage(content=reply)],
+        "next_agent": "END"
+    }
+
+# --- JEV Fast-Path Entry Router (< 0.1 ms) ---
+def route_entry(state: MultiAgentState):
+    """Evaluates user intent via JEV Fast Router before invoking any agent or supervisor."""
+    messages = state.get("messages", [])
+    if not messages:
+        return "direct_response"
+
+    last_msg = messages[-1]
+    content = last_msg.content if hasattr(last_msg, "content") else str(last_msg)
+    
+    decision = jev_fast_router(content)
+    logger.info(f"[JEV Fast Router] Instant decision: '{decision}' for prompt: '{content[:60]}...'")
+    
+    if decision == "direct_response":
+        return "direct_response"
+    elif decision == "duckdb_agent":
+        return "duckdb_agent"
+    elif decision == "typedb_agent":
+        return "typedb_agent"
+    return "supervisor"
+
+# --- Supervisor Fallback Conditional Edge Routing ---
+def route_next_step(state: MultiAgentState):
+    next_step = state.get("next_agent")
+    if next_step == "duckdb_agent":
+        return "duckdb_agent"
+    elif next_step == "typedb_agent":
+        return "typedb_agent"
     return END
 
-# --- Tool Execution Node ---
-def execute_tools(state: AgentState):
-    last_message = state["messages"][-1]
-    tool_messages = []
-    
-    for tool_call in last_message.tool_calls:
-        tool_name = tool_call["name"]
-        tool_args = tool_call["args"]
-        
-        if tool_name == "query_l2l_database":
-            result = query_l2l_database.invoke(tool_args)
-        elif tool_name == "generate_l2l_chart":
-            json_str = generate_l2l_chart.invoke(tool_args)
-            # Wrap the JSON so the LLM leaves it pristine and the frontend can match it easily
-            result = f"```plotly_json\n{json_str}\n```"
-        else:
-            result = f"Error: Tool {tool_name} not found."
-            
-        tool_messages.append({
-            "role": "tool",
-            "content": str(result),
-            "tool_call_id": tool_call["id"]
-        })
-        
-    return {"messages": tool_messages}
+# --- Compose Top-Level Multi-Agent Graph ---
+workflow = StateGraph(MultiAgentState)
 
-# --- Graph Workflow Setup ---
-workflow = StateGraph(AgentState)
+workflow.add_node("direct_response", direct_response_node)
+workflow.add_node("supervisor", supervisor_node)
+workflow.add_node("duckdb_agent", run_duckdb_subgraph)
+workflow.add_node("typedb_agent", run_typedb_subgraph)
 
-workflow.add_node("agent", call_model)
-workflow.add_node("tools", execute_tools)
+# High-Speed JEV Router at entry point
+workflow.set_conditional_entry_point(
+    route_entry,
+    {
+        "direct_response": "direct_response",
+        "duckdb_agent": "duckdb_agent",
+        "typedb_agent": "typedb_agent",
+        "supervisor": "supervisor"
+    }
+)
 
-workflow.set_entry_point("agent")
-workflow.add_conditional_edges("agent", should_continue, ["tools", END])
-workflow.add_edge("tools", "agent")
+# Supervisor fallback if query is ambiguous
+workflow.add_conditional_edges(
+    "supervisor",
+    route_next_step,
+    {
+        "duckdb_agent": "duckdb_agent",
+        "typedb_agent": "typedb_agent",
+        END: END
+    }
+)
+
+workflow.add_edge("direct_response", END)
+workflow.add_edge("duckdb_agent", END)
+workflow.add_edge("typedb_agent", END)
 
 # --- PostgreSQL Checkpointer Setup ---
 POSTGRES_URL = os.getenv("POSTGRES_URL", "postgresql://postgres:postgrespassword@postgres:5432/l2l_chat_memory")
@@ -109,5 +162,5 @@ pool = ConnectionPool(conninfo=POSTGRES_URL, max_size=10)
 checkpointer = PostgresSaver(pool)
 checkpointer.setup()
 
-# Compile executable LangGraph application
+# Compile executable multi-agent application
 agent_app = workflow.compile(checkpointer=checkpointer)

@@ -16,6 +16,15 @@ services:
       timeout: 5s
       retries: 5
 
+  typedb:
+    #image: vaticle/typedb:2.28.2  
+    image: vaticle/typedb:2.29.0
+    container_name: l2l_typedb
+    ports:
+      - "1729:1729"
+    volumes:
+      - typedb_data:/opt/typedb-all-linux-x86_64/server/data
+
   web:
     build: .
     container_name: l2l_analytics_app
@@ -27,6 +36,9 @@ services:
       - PYTHONUNBUFFERED=1
       - GOOGLE_APPLICATION_CREDENTIALS=/root/.config/gcloud/application_default_credentials.json
       - POSTGRES_URL=postgresql://postgres:postgrespassword@postgres:5432/l2l_chat_memory
+      - TYPEDB_HOST=typedb
+      - TYPEDB_PORT=1729
+      - TYPEDB_DATABASE=l2l_analytics
     volumes:
       - .:/app
       - ./data:/mnt/duckdb
@@ -38,3 +50,4 @@ services:
 
 volumes:
   postgres_data:
+  typedb_data:

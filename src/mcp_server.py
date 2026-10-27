@@ -14,7 +14,7 @@ if not hasattr(_te, "eval_type_backport"):
     _te.eval_type_backport = _eval_type_backport
 
 from fastmcp import FastMCP
-from src.tools import query_l2l_database, generate_l2l_chart
+from src.tools import query_l2l_database, generate_l2l_chart, query_typedb
 
 mcp = FastMCP("L2L-Analytics-MCP")
 
@@ -22,6 +22,11 @@ mcp = FastMCP("L2L-Analytics-MCP")
 def run_l2l_sql(sql_query: str) -> str:
     """Query DuckDB for L2L dispatches and event answers (production orders)."""
     return query_l2l_database.invoke({"sql_query": sql_query})
+
+@mcp.tool()
+def run_typedb_query(typeql_query: str) -> str:
+    """Query TypeDB Knowledge Graph for plant hierarchies, fault triage, and order blast radius."""
+    return query_typedb.invoke({"typeql_query": typeql_query})
 
 if __name__ == "__main__":
     mcp.run()

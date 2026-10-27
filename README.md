@@ -1,66 +1,52 @@
 ### 1. Executive Summary                                                                     
-                                                                                               
+                                                                                                
 The project is a production-ready, full-stack Manufacturing Analytics Assistant tailored for 
-Leading2Lean (L2L) dispatch and maintenance data. It enables factory managers and engineers  
-to query maintenance dispatches, downtime, operational metrics, and production orders using   
-natural language, returning both formatted tabular data and dynamic interactive charts.       
+Leading2Lean (L2L) dispatch and maintenance data. It uses a **Hierarchical Multi-Agent Architecture**
+combining high-performance local OLAP (DuckDB) and semantic Knowledge Graph reasoning (TypeDB).
+Factory managers and engineers can query maintenance dispatches, downtime, operational metrics, 
+and production orders using natural language, returning formatted tables, interactive charts, 
+and multi-hop causal root-cause explanations.
 
 ──────                                                                                       
 ### 2. Key Achievements & Implemented Capabilities                                           
 
-#### A. Multi-Site Curated Data Architecture (BigQuery → DuckDB via PyArrow)
+#### A. Multi-Site Curated Data Architecture (BigQuery → DuckDB & TypeDB)
 
 • High-Performance Local OLAP: Implemented in `src/cache_pyarrow.py`, `sync_bigquery_to_duckdb` 
-synchronizes upstream cloud data from `k-bicloud-curated-0001-p.l2l` into a local embedded DuckDB cache (`cache.duckdb`):
-  1. `f_l2l_dispatches`: Unified `UNION ALL` across all three plant sites:
-     - `dispatches_240` (Stargard, Site 240)
-     - `dispatches_260` (Shanghai, Site 260)
-     - `dispatches_276` (Ottawa, Site 276)
-     Includes both internal surrogate key `id` and human-facing `dispatchnumber`.
-  2. `event_answers`: Production order event answers from `event_answers`.
-• Relational Modeling: Links production orders to dispatches via `f_l2l_dispatches.id = event_answers.dispatch`.
-• Zero-Copy Streaming: Streams chunk-by-chunk using PyArrow RecordBatches directly into DuckDB tables.
-• Cost & Speed Optimization: Prevents slow queries and expensive BigQuery charges by serving agent SQL queries locally.
+synchronizes upstream cloud data from `k-bicloud-curated-0001-p.l2l` into DuckDB cache (`cache.duckdb`):
+  1. `f_l2l_dispatches`: Unified across Sites 240 (Stargard), 260 (Shanghai), and 276 (Ottawa).
+  2. `event_answers`: Production order event answers linked via `f_l2l_dispatches.id = event_answers.dispatch`.
+• Semantic Knowledge Graph Ingestion: `src/typedb_sync.py` projects DuckDB relational records into TypeDB:
+  - Asset containment hierarchy: `site -> area -> line -> machine`.
+  - N-ary hyper-relation: `maintenance_dispatch` binding machines, active orders, root cause reasons, and trade skills.
+  - Deductive inference rules (`transitive_plant_containment`).
 
-#### B. LangGraph ReAct Agent & Multi-Turn Memory                                            
+#### B. Hierarchical Multi-Agent Architecture (LangGraph Subgraphs)
 
-• ReAct Graph Engine: Set up in `src/agent.py` with dynamic prompt injection (`get_agent_system_prompt`) 
-that embeds schema knowledge for both dispatches and production orders, temporal context, and site mappings 
-(e.g., Site 240 → Stargard, Site 260 → Shanghai, Site 276 → Ottawa).
-• Persistent State & Sessions: Integrated with PostgreSQL via PostgresSaver (`l2l_chat_memory` database), 
-allowing conversation sessions to persist across restarts and reloads.
-• Tools Implemented (`src/tools.py`):
-    • `query_l2l_database`: Executes analytical SQL across both tables and renders Markdown tables.
-    • `generate_l2l_chart`: Directly compiles SQL results into responsive Plotly bar, line, pie, or scatter charts.
+• **Supervisor Router Agent** (`src/agent.py`):
+  - Uses structured intent classification to route user questions to the optimal specialist sub-agent.
+  - Handles greetings and direct conversational responses.
+• **DuckDB Specialist Subgraph** (`src/subgraphs/duckdb_agent.py`):
+  - Specialized in analytical SQL queries, aggregations (SUM, AVG, COUNT), and interactive Plotly visualization.
+  - Bound tools: `query_l2l_database`, `generate_l2l_chart`.
+• **TypeDB Specialist Subgraph** (`src/subgraphs/typedb_agent.py`):
+  - Specialized in multi-hop causal paths, production order blast radius, and prescriptive fault triage.
+  - Bound tools: `query_typedb` (with compiler-checked error self-correction).
+• **Persistent State & Sessions**: Integrated with PostgreSQL via `PostgresSaver` (`l2l_chat_memory` database).
 
-#### C. Hypermedia Frontend (FastAPI + HTMX + Tailwind + Plotly)                             
+#### C. Hypermedia Frontend (FastAPI + HTMX + Tailwind + Plotly)
 
-• No Node.js/React Build Dependency: Utilizes FastAPI server-side rendering with Jinja2 and 
-HTMX for reactive SPA-like interactions without frontend build tooling.
-• Interactive Chat UI:
-    • `base.html`: Dark-themed layout using Tailwind CSS CDN and Plotly.js.
-    • `chat_area.html`: Message container and submission form.
-    • `sidebar.html`: Multi-thread navigation list with automated semantic naming (`DDMonYY-HH:MM:SS-<Slug>`).
-    • `chat_response_partial.html`: HTMX response partial that swaps in bot answers, renders 
-    Plotly charts on the fly, and uses Out-Of-Band (OOB) swaps to update active thread titles and refresh the sidebar.
-• Session History Replay: `src/utils/helpers.py:extract_history_turns` parses stored 
-checkpointer turns so past threads reload with all interactive charts fully rendered.
+• Reactive SPA-like interactions without Node.js or React build dependencies.
+• Multi-thread sidebar navigation with automatic semantic naming.
+• Dynamic on-the-fly Plotly chart rendering.
 
-#### D. Model Provider Flexibility                                                           
+#### D. Model Provider Flexibility
 
-• Configured via `.env` to switch seamlessly between OpenAI (`gpt-4o`) and Google GenAI (`gemini-1.5-pro`).
+• Configured via `.env` to switch between OpenAI (`gpt-4o`) and Google GenAI (`gemini-1.5-pro`).
 
-#### E. External Protocol Support (Model Context Protocol)                                   
+#### E. Model Context Protocol (MCP)
 
-• `src/mcp_server.py`: Built with FastMCP to expose DuckDB dispatches and production order query 
-tools over standard MCP, enabling external MCP-compatible AI clients (Claude Desktop, IDE agents) to query the dataset.
-
-#### F. Guardrails & Containerized Infrastructure                                            
-
-• Security & Rails: `config.yml` configures NeMo Guardrails to guard against prompt injection and jailbreaks.
-• Container Orchestration:
-    • `Dockerfile`: Python 3.11-slim container.
-    • `docker-compose.yml`: Coordinates the web application, DuckDB data volume, GCP authentication credentials, and PostgreSQL 16 Alpine service.
+• `src/mcp_server.py`: Exposes both DuckDB SQL and TypeDB Knowledge Graph query tools to external MCP clients (Claude Desktop, IDE agents).
 
 ──────                                                                                       
 ### 3. Current Project Layout                                                                
@@ -68,17 +54,25 @@ tools over standard MCP, enabling external MCP-compatible AI clients (Claude Des
 ```text
 C:\AI_dev\l2l-analytics-chatbot\
 ├── main.py                               # FastAPI routes & HTMX handlers
-├── docker-compose.yml                    # Multi-container orchestration (App + Postgres 16)
+├── docker-compose.yml                    # Multi-container orchestration (App + Postgres + TypeDB)
 ├── Dockerfile                            # App container definition
 ├── requirements.txt                      # Project dependencies
-├── config/config.yml                     # NeMo Guardrails configuration
-├── data/cache.duckdb                     # Local OLAP DuckDB database cache
+├── typedb/
+│   └── schema.tql                        # TypeDB PER schema & inference rules
 ├── src/
-│   ├── agent.py                          # LangGraph ReAct agent & PostgresSaver
-│   ├── cache_pyarrow.py                  # PyArrow streaming BigQuery -> DuckDB sync (Sites 240, 260, 276 & Event Answers)
-│   ├── tools.py                          # DuckDB query & Plotly chart tools
-│   ├── mcp_server.py                     # FastMCP server for external clients
-│   ├── prompts/agent_prompt.py           # Dynamic system prompt, dual schemas & join rules
+│   ├── agent.py                          # Multi-Agent Supervisor Graph (LangGraph)
+│   ├── llm.py                            # Centralized LLM factory (OpenAI / Gemini)
+│   ├── tools.py                          # DuckDB & TypeDB execution tools
+│   ├── typedb_sync.py                    # DuckDB -> TypeDB sync ETL
+│   ├── cache_pyarrow.py                  # PyArrow streaming BigQuery -> DuckDB sync
+│   ├── mcp_server.py                     # FastMCP server
+│   ├── subgraphs/
+│   │   ├── duckdb_agent.py               # DuckDB OLAP Specialist Subgraph
+│   │   └── typedb_agent.py               # TypeDB KG Specialist Subgraph
+│   ├── prompts/
+│   │   ├── supervisor_prompt.py          # Supervisor routing prompt
+│   │   ├── duckdb_prompt.py              # DuckDB system prompt
+│   │   └── typedb_prompt.py              # TypeDB system prompt
 │   └── utils/helpers.py                  # Thread generation & history turn parser
 └── templates/                            # HTMX + Tailwind Jinja2 templates
 ```

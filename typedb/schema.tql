@@ -1,0 +1,89 @@
+define
+
+# --------------------------------------------------
+# ATTRIBUTES
+# --------------------------------------------------
+site_id sub attribute, value long;
+site_name sub attribute, value string;
+areacode sub attribute, value string;
+linecode sub attribute, value string;
+lineabbreviation sub attribute, value string;
+machinecode sub attribute, value string;
+machinedescription sub attribute, value string;
+order_number sub attribute, value string;
+reasoncode sub attribute, value string;
+tradecode sub attribute, value string;
+dispatchnumber sub attribute, value long;
+downtime_minutes sub attribute, value long;
+is_open sub attribute, value boolean;
+reported_time sub attribute, value datetime;
+
+# --------------------------------------------------
+# RELATIONS
+# --------------------------------------------------
+
+# Hierarchical containment relation: Site -> Area -> Line -> Machine
+plant_hierarchy sub relation,
+    relates parent_location,
+    relates child_asset;
+
+# N-ary hyper-relation connecting all facets of a maintenance event
+maintenance_dispatch sub relation,
+    relates affected_machine,
+    relates active_order,
+    relates root_cause,
+    relates required_trade,
+    owns dispatchnumber,
+    owns downtime_minutes,
+    owns is_open,
+    owns reported_time;
+
+# --------------------------------------------------
+# ENTITIES
+# --------------------------------------------------
+
+site sub entity,
+    owns site_id,
+    owns site_name,
+    plays plant_hierarchy:parent_location;
+
+area sub entity,
+    owns areacode,
+    plays plant_hierarchy:child_asset,
+    plays plant_hierarchy:parent_location;
+
+line sub entity,
+    owns linecode,
+    owns lineabbreviation,
+    plays plant_hierarchy:child_asset,
+    plays plant_hierarchy:parent_location;
+
+machine sub entity,
+    owns machinecode,
+    owns machinedescription,
+    plays plant_hierarchy:child_asset,
+    plays maintenance_dispatch:affected_machine;
+
+production_order sub entity,
+    owns order_number,
+    plays maintenance_dispatch:active_order;
+
+reason_code sub entity,
+    owns reasoncode,
+    plays maintenance_dispatch:root_cause;
+
+trade_code sub entity,
+    owns tradecode,
+    plays maintenance_dispatch:required_trade;
+
+# --------------------------------------------------
+# DEDUCTIVE INFERENCE RULES
+# --------------------------------------------------
+
+rule transitive_plant_containment:
+    when {
+        (parent_location: $parent, child_asset: $mid) isa plant_hierarchy;
+        (parent_location: $mid, child_asset: $child) isa plant_hierarchy;
+    } then {
+        (parent_location: $parent, child_asset: $child) isa plant_hierarchy;
+    };

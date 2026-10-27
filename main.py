@@ -31,6 +31,7 @@ from langchain_core.messages import HumanMessage
 
 from src.agent import agent_app, POSTGRES_URL
 from src.cache_pyarrow import sync_bigquery_to_duckdb
+from src.typedb_sync import sync_duckdb_to_typedb
 
 app = FastAPI(title="L2L Analytics Chatbot")
 
@@ -302,3 +303,18 @@ async def sync_cache_endpoint():
     except Exception as e:
         logging.exception(f"Cache sync failed: {e}")
         raise HTTPException(status_code=500, detail=f"Cache sync failed: {str(e)}")
+
+@app.post("/sync-typedb")
+async def sync_typedb_endpoint(limit: Optional[int] = None):
+    """Triggers knowledge graph sync from local DuckDB into TypeDB."""
+    try:
+        result = sync_duckdb_to_typedb(limit_dispatches=limit)
+        return {
+            "status": "success",
+            "message": "TypeDB Knowledge Graph synced successfully from DuckDB.",
+            "details": result
+        }
+    except Exception as e:
+        logging.exception(f"TypeDB sync failed: {e}")
+        raise HTTPException(status_code=500, detail=f"TypeDB sync failed: {str(e)}")
+
