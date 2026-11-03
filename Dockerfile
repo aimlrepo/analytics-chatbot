@@ -17,6 +17,7 @@ COPY . .
 
 RUN mkdir -p /mnt/duckdb
 
-EXPOSE 8000
+# Support both local port (8000) and Cloud Run dynamic port (defaults to $PORT, falls back to 8000)
+EXPOSE 8000 8080
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "exec uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]
