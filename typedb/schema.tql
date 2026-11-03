@@ -19,7 +19,7 @@ is_open sub attribute, value boolean;
 reported_time sub attribute, value datetime;
 
 # --------------------------------------------------
-# RELATIONS
+# RELATIONS (Base & Inferred)
 # --------------------------------------------------
 
 # Hierarchical containment relation: Site -> Area -> Line -> Machine
@@ -27,7 +27,7 @@ plant_hierarchy sub relation,
     relates parent_location,
     relates child_asset;
 
-# N-ary hyper-relation connecting all facets of a maintenance event
+# N-ary hyper-relation connecting all physical facets of a maintenance event
 maintenance_dispatch sub relation,
     relates affected_machine,
     relates active_order,
@@ -38,14 +38,38 @@ maintenance_dispatch sub relation,
     owns is_open,
     owns reported_time;
 
+# Inferred Relation: Prescriptive Fault Triage (Machine + Root Cause -> Recommended Trade)
+recommended_triage sub relation,
+    relates target_machine,
+    relates diagnosed_reason,
+    relates assigned_trade;
+
+# Inferred Relation: Line-Level Triage Capability (Line + Root Cause -> Qualified Trade)
+line_recommended_triage sub relation,
+    relates target_line,
+    relates diagnosed_reason,
+    relates assigned_trade;
+
+# Inferred Relation: Cascading Order Disruption (Order -> Affected Production Line)
+order_line_impact sub relation,
+    relates impacted_order,
+    relates affected_line,
+    relates root_cause;
+
+# Inferred Relation: Enterprise Factory Blast Radius (Order -> Affected Site)
+order_site_impact sub relation,
+    relates impacted_order,
+    relates affected_site;
+
 # --------------------------------------------------
-# ENTITIES
+# ENTITIES & ROLE PLAYERS
 # --------------------------------------------------
 
 site sub entity,
     owns site_id,
     owns site_name,
-    plays plant_hierarchy:parent_location;
+    plays plant_hierarchy:parent_location,
+    plays order_site_impact:affected_site;
 
 area sub entity,
     owns areacode,
@@ -56,34 +80,84 @@ line sub entity,
     owns linecode,
     owns lineabbreviation,
     plays plant_hierarchy:child_asset,
-    plays plant_hierarchy:parent_location;
+    plays plant_hierarchy:parent_location,
+    plays line_recommended_triage:target_line,
+    plays order_line_impact:affected_line;
 
 machine sub entity,
     owns machinecode,
     owns machinedescription,
     plays plant_hierarchy:child_asset,
-    plays maintenance_dispatch:affected_machine;
+    plays maintenance_dispatch:affected_machine,
+    plays recommended_triage:target_machine;
 
 production_order sub entity,
     owns order_number,
-    plays maintenance_dispatch:active_order;
+    plays maintenance_dispatch:active_order,
+    plays order_line_impact:impacted_order,
+    plays order_site_impact:impacted_order;
 
 reason_code sub entity,
     owns reasoncode,
-    plays maintenance_dispatch:root_cause;
+    plays maintenance_dispatch:root_cause,
+    plays recommended_triage:diagnosed_reason,
+    plays line_recommended_triage:diagnosed_reason,
+    plays order_line_impact:root_cause;
 
 trade_code sub entity,
     owns tradecode,
-    plays maintenance_dispatch:required_trade;
+    plays maintenance_dispatch:required_trade,
+    plays recommended_triage:assigned_trade,
+    plays line_recommended_triage:assigned_trade;
 
 # --------------------------------------------------
 # DEDUCTIVE INFERENCE RULES
 # --------------------------------------------------
 
+# 1. Transitive Plant Asset Containment: Site -> Line, Site -> Machine
 rule transitive_plant_containment:
     when {
         (parent_location: $parent, child_asset: $mid) isa plant_hierarchy;
         (parent_location: $mid, child_asset: $child) isa plant_hierarchy;
     } then {
         (parent_location: $parent, child_asset: $child) isa plant_hierarchy;
+    };
+
+# 2. Prescriptive Fault Triage: Infer recommended trade from historical machine repairs
+rule infer_prescriptive_triage:
+    when {
+        (affected_machine: $m, root_cause: $r, required_trade: $t) isa maintenance_dispatch;
+    } then {
+        (target_machine: $m, diagnosed_reason: $r, assigned_trade: $t) isa recommended_triage;
+    };
+
+# 3. Line-Level Skill Capability: Propagate machine fault skills to entire production line
+rule infer_line_triage_capability:
+    when {
+        (parent_location: $l, child_asset: $m) isa plant_hierarchy;
+        $l isa line;
+        $m isa machine;
+        (affected_machine: $m, root_cause: $r, required_trade: $t) isa maintenance_dispatch;
+    } then {
+        (target_line: $l, diagnosed_reason: $r, assigned_trade: $t) isa line_recommended_triage;
+    };
+
+# 4. Cascading Order Blast Radius: Map order disruption to entire production line
+rule infer_order_line_impact:
+    when {
+        (active_order: $po, affected_machine: $m, root_cause: $r) isa maintenance_dispatch;
+        (parent_location: $l, child_asset: $m) isa plant_hierarchy;
+        $l isa line;
+    } then {
+        (impacted_order: $po, affected_line: $l, root_cause: $r) isa order_line_impact;
+    };
+
+# 5. Enterprise Order Disruption: Infer site ownership of order disruptions
+rule infer_order_site_impact:
+    when {
+        (active_order: $po, affected_machine: $m) isa maintenance_dispatch;
+        (parent_location: $s, child_asset: $m) isa plant_hierarchy;
+        $s isa site;
+    } then {
+        (impacted_order: $po, affected_site: $s) isa order_site_impact;
     };

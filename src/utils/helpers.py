@@ -13,13 +13,10 @@ def generate_thread_name(first_user_message: str = "") -> str:
     Generates a timestamped thread title in the format: DDMonYY-HH:MM:SS-Summary
     Example: 26Sep26-13:33:00-Site-240-Dispatches
     """
-    # 1. Date and Time prefix: DDMonYY-HH:MM:SS (e.g., 26Sep26-13:33:00)
     now = datetime.now()
     timestamp_prefix = now.strftime("%d%b%y-%H:%M:%S")
     
-    # 2. Derive a short summary slug from the first prompt
     if first_user_message:
-        # Strip non-alphanumeric characters except spaces
         clean_text = re.sub(r'[^\w\s]', '', first_user_message).strip()
         words = clean_text.split()[:3]
         summary_slug = "-".join([w.capitalize() for w in words])
@@ -56,7 +53,7 @@ def get_all_threads(limit: int = 10):
 def extract_history_turns(messages):
     """
     Parses LangGraph / LangChain messages into sequential user-bot conversation turns,
-    associating any tool-generated Plotly JSON with the corresponding turn.
+    associating any tool-generated Plotly JSONs with the corresponding turn.
     """
     turns = []
     current_turn = None
@@ -72,12 +69,13 @@ def extract_history_turns(messages):
                     "Plotly JSON string" in current_turn["bot_response"] 
                     or "Jupyter notebook" in current_turn["bot_response"]
                 ):
-                    current_turn["bot_response"] = "Here is the requested chart:"
+                    current_turn["bot_response"] = "Here are the requested charts:" if len(current_turn.get("plotly_jsons", [])) > 1 else "Here is the requested chart:"
                 turns.append(current_turn)
             current_turn = {
                 "user_message": msg.content,
                 "bot_response": "",
-                "plotly_json": None
+                "plotly_json": None,
+                "plotly_jsons": []
             }
         elif msg_type == "tool":
             raw_content = str(msg.content)
@@ -89,7 +87,9 @@ def extract_history_turns(messages):
             )
             if '"data"' in clean_json and '"layout"' in clean_json:
                 if current_turn is not None:
-                    current_turn["plotly_json"] = clean_json
+                    if not current_turn["plotly_json"]:
+                        current_turn["plotly_json"] = clean_json
+                    current_turn.setdefault("plotly_jsons", []).append(clean_json)
         elif msg_type == "ai":
             if current_turn is not None and msg.content:
                 current_turn["bot_response"] = msg.content
@@ -99,7 +99,7 @@ def extract_history_turns(messages):
             "Plotly JSON string" in current_turn["bot_response"] 
             or "Jupyter notebook" in current_turn["bot_response"]
         ):
-            current_turn["bot_response"] = "Here is the requested chart:"
+            current_turn["bot_response"] = "Here are the requested charts:" if len(current_turn.get("plotly_jsons", [])) > 1 else "Here is the requested chart:"
         turns.append(current_turn)
 
     return turns

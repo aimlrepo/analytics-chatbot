@@ -23,6 +23,8 @@ synchronizes upstream cloud data from `k-bicloud-curated-0001-p.l2l` into DuckDB
 
 #### B. Hierarchical Multi-Agent Architecture (LangGraph Subgraphs)
 
+• **NeMo Guardrails & Safety Filter** (`src/guardrails.py`):
+  - Pre-flight safety barrier detecting prompt injection, jailbreaks, and destructive instructions before routing.
 • **Supervisor Router Agent** (`src/agent.py`):
   - Uses structured intent classification to route user questions to the optimal specialist sub-agent.
   - Handles greetings and direct conversational responses.
@@ -44,35 +46,42 @@ synchronizes upstream cloud data from `k-bicloud-curated-0001-p.l2l` into DuckDB
 
 • Configured via `.env` to switch between OpenAI (`gpt-4o`) and Google GenAI (`gemini-1.5-pro`).
 
-#### E. Model Context Protocol (MCP)
+#### E. Model Context Protocol (MCP) & Google Vertex AI / Gemini Enterprise
 
-• `src/mcp_server.py`: Exposes both DuckDB SQL and TypeDB Knowledge Graph query tools to external MCP clients (Claude Desktop, IDE agents).
+• `src/mcp_server.py`: Exposes DuckDB SQL and TypeDB Knowledge Graph tools, resources (`schema://`), and unified prompts to external MCP clients (Claude Desktop, IDE agents).
+• `src/api.py` & `vertex_openapi.yaml`: OpenAPI 3.0 specification and REST endpoints (`/api/v1/chat`, `/api/v1/tools/...`) for 1-click import into Google Gemini Enterprise and Google Vertex AI Agent Builder.
 
 ──────                                                                                       
 ### 3. Current Project Layout                                                                
 
 ```text
 C:\AI_dev\l2l-analytics-chatbot\
+├── TECHNICAL_ARCHITECTURE.md             # Complete 1-pager technical architecture & data flow
+├── technical_architecture_print.html     # High-contrast light theme visual architecture specification
+├── vertex_openapi.yaml                   # OpenAPI 3.0 specification for Gemini Enterprise & Vertex AI
+├── NEXT_ACTIONS.md                       # Roadmap & upcoming milestones
 ├── main.py                               # FastAPI routes & HTMX handlers
 ├── docker-compose.yml                    # Multi-container orchestration (App + Postgres + TypeDB)
 ├── Dockerfile                            # App container definition
 ├── requirements.txt                      # Project dependencies
 ├── typedb/
-│   └── schema.tql                        # TypeDB PER schema & inference rules
+│   └── schema.tql                        # TypeDB PER schema & deductive inference rules
 ├── src/
 │   ├── agent.py                          # Multi-Agent Supervisor Graph (LangGraph)
+│   ├── api.py                            # REST API for Gemini Enterprise / Vertex AI (/api/v1)
+│   ├── guardrails.py                     # NeMo Guardrails safety & injection shield
 │   ├── llm.py                            # Centralized LLM factory (OpenAI / Gemini)
 │   ├── tools.py                          # DuckDB & TypeDB execution tools
 │   ├── typedb_sync.py                    # DuckDB -> TypeDB sync ETL
 │   ├── cache_pyarrow.py                  # PyArrow streaming BigQuery -> DuckDB sync
-│   ├── mcp_server.py                     # FastMCP server
+│   ├── mcp_server.py                     # FastMCP server (Tools, Prompts, Resources)
 │   ├── subgraphs/
 │   │   ├── duckdb_agent.py               # DuckDB OLAP Specialist Subgraph
 │   │   └── typedb_agent.py               # TypeDB KG Specialist Subgraph
 │   ├── prompts/
 │   │   ├── supervisor_prompt.py          # Supervisor routing prompt
-│   │   ├── duckdb_prompt.py              # DuckDB system prompt
-│   │   └── typedb_prompt.py              # TypeDB system prompt
+│   │   ├── duckdb_prompt.py              # DuckDB prompt & schema SSOT
+│   │   └── typedb_prompt.py              # TypeDB prompt & inference rules SSOT
 │   └── utils/helpers.py                  # Thread generation & history turn parser
 └── templates/                            # HTMX + Tailwind Jinja2 templates
 ```

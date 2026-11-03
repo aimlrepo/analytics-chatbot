@@ -93,7 +93,15 @@ def query_typedb(typeql_query: str) -> str:
     driver = None
     try:
         address = f"{TYPEDB_HOST}:{TYPEDB_PORT}"
-        driver = TypeDB.core_driver(address)
+        try:
+            driver = TypeDB.core_driver(address)
+        except Exception as conn_err:
+            if TYPEDB_HOST != "localhost":
+                logger.warning(f"[query_typedb] Failed to connect to '{address}', falling back to 'localhost:{TYPEDB_PORT}': {conn_err}")
+                address = f"localhost:{TYPEDB_PORT}"
+                driver = TypeDB.core_driver(address)
+            else:
+                raise conn_err
 
         if not driver.databases.contains(TYPEDB_DATABASE):
             return f"Error: TypeDB database '{TYPEDB_DATABASE}' does not exist. Please run the sync script first."
@@ -131,11 +139,14 @@ def query_typedb(typeql_query: str) -> str:
         rows = []
         for cm in concept_maps:
             row = {}
-            for var, concept in cm.map().items():
-                if concept.is_attribute():
+            c_map = cm.map() if callable(cm.map) else cm.map
+            for var, concept in c_map.items():
+                if hasattr(concept, "is_attribute") and concept.is_attribute():
                     row[var] = concept.get_value()
-                elif concept.is_entity() or concept.is_relation():
+                elif hasattr(concept, "is_entity") and (concept.is_entity() or concept.is_relation()):
                     row[var] = f"<{concept.get_type().get_label().name()}>"
+                elif hasattr(concept, "get_value"):
+                    row[var] = concept.get_value()
                 else:
                     row[var] = str(concept)
             rows.append(row)

@@ -48,9 +48,9 @@ def call_duckdb_worker(state: DuckDBAgentState):
     else:
         messages[0] = system_prompt
 
-    # Circuit breaker: enforce max 2 tool queries per current user turn
+    # Circuit breaker: enforce max 4 tool queries per current user turn to allow multi-chart generation
     tool_count = count_current_turn_tools(messages)
-    if tool_count >= 2:
+    if tool_count >= 4:
         logger.warning(f"[DuckDB Agent] Circuit breaker active: Maximum tool query attempts ({tool_count}) reached for this turn.")
         limit_msg = SystemMessage(
             content="Notice: You have reached the maximum tool query attempts for this turn. "
@@ -65,7 +65,7 @@ def call_duckdb_worker(state: DuckDBAgentState):
 def should_continue(state: DuckDBAgentState):
     last_message = state["messages"][-1]
     if hasattr(last_message, "tool_calls") and last_message.tool_calls:
-        if count_current_turn_tools(state["messages"]) >= 2:
+        if count_current_turn_tools(state["messages"]) >= 4:
             logger.warning("[DuckDB Agent] Circuit breaker triggered in edge: terminating tool loop.")
             return END
         return "tools"

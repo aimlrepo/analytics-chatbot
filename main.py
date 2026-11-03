@@ -17,7 +17,7 @@ logging.basicConfig(
 )
 
 # Set specific third-party library log levels if needed
-logging.getLogger("nemoguardrails").setLevel(logging.DEBUG)
+logging.getLogger("nemoguardrails").setLevel(logging.ERROR)
 
 # 2. Instantiate local module logger for main.py
 logger = logging.getLogger(__name__)
@@ -32,8 +32,29 @@ from langchain_core.messages import HumanMessage
 from src.agent import agent_app, POSTGRES_URL
 from src.cache_pyarrow import sync_bigquery_to_duckdb
 from src.typedb_sync import sync_duckdb_to_typedb
+from src.api import api_router
 
-app = FastAPI(title="L2L Analytics Chatbot")
+app = FastAPI(
+    title="L2L Manufacturing Analytics Assistant API",
+    version="1.0.0",
+    description="""
+# L2L Manufacturing Analytics Assistant API
+
+OpenAPI specification tailored for **Google Gemini Enterprise**, **Google Vertex AI Agent Builder**, and **Vertex AI Extensions**.
+
+Couples:
+- **Local Columnar OLAP (DuckDB)**: Sub-second aggregations, multi-site dispatches, and Plotly visualizations.
+- **Knowledge Graph (TypeDB 2.29)**: Multi-hop causal paths, order blast radius, and prescriptive fault triage.
+- **Hierarchical Multi-Agent (LangGraph)**: Stateful conversational supervisor with persistent session memory.
+    """,
+    servers=[
+        {"url": "http://localhost:8000", "description": "Local Development Server"},
+        {"url": "/", "description": "Cloud Run Production / Ingress Gateway"}
+    ]
+)
+
+# Mount REST API router for Gemini Enterprise & Vertex AI
+app.include_router(api_router)
 
 # Setup templates and static directories
 templates = Jinja2Templates(directory="templates")
@@ -234,7 +255,10 @@ async def chat_endpoint(
                 last_user_idx = idx
                 break
 
-        # 4. Extract ToolMessage ONLY from the current turn
+        plotly_jsons = []
+        plotly_json = None
+
+        # 4. Extract ToolMessages (supporting multiple stacked charts) ONLY from the current turn
         if last_user_idx != -1:
             current_turn_messages = messages[last_user_idx + 1:]
             for msg in current_turn_messages:
@@ -250,13 +274,17 @@ async def chat_endpoint(
                     )
                     
                     if '"data"' in clean_json and '"layout"' in clean_json:
-                        plotly_json = clean_json
-                        logger.info(f"Successfully extracted Plotly JSON for current turn (length: {len(plotly_json)})")
-                        break
+                        plotly_jsons.append(clean_json)
+                        logger.info(f"Successfully extracted Plotly JSON #{len(plotly_jsons)} for current turn (length: {len(clean_json)})")
 
-        # 5. Clean up redundant LLM boilerplate text when a chart is present
-        if plotly_json and ("Plotly JSON string" in bot_text or "Jupyter notebook" in bot_text):
-            bot_text = "Here is the requested chart:"
+        plotly_json = plotly_jsons[0] if plotly_jsons else None
+
+        # 5. Clean up redundant LLM boilerplate text when charts are present
+        if plotly_jsons and ("Plotly JSON string" in bot_text or "Jupyter notebook" in bot_text):
+            bot_text = "Here are the requested charts:" if len(plotly_jsons) > 1 else "Here is the requested chart:"
+
+        # Strip any hallucinated base64 images that LLMs occasionally emit instead of calling chart tools
+        bot_text = re.sub(r"!\[.*?\]\(data:image\/[a-zA-Z]+;base64,[^\)]*\)", "", bot_text).strip()
 
     except Exception as e:
         logger.error(f"Error processing chat request: {str(e)}", exc_info=True)
@@ -269,6 +297,7 @@ async def chat_endpoint(
             "user_message": user_input,
             "bot_response": bot_text,
             "plotly_json": plotly_json,
+            "plotly_jsons": plotly_jsons,
             "active_thread_id": clean_thread_id
         }
     )
@@ -317,4 +346,17 @@ async def sync_typedb_endpoint(limit: Optional[int] = None):
     except Exception as e:
         logging.exception(f"TypeDB sync failed: {e}")
         raise HTTPException(status_code=500, detail=f"TypeDB sync failed: {str(e)}")
+
+@app.get("/openapi.yaml", include_in_schema=False)
+async def get_openapi_yaml():
+    """Generates an OpenAPI 3.0 specification in YAML format for Google Cloud Vertex AI."""
+    import json
+    openapi_schema = app.openapi()
+    try:
+        import yaml
+        yaml_content = yaml.dump(openapi_schema, sort_keys=False)
+        return Response(content=yaml_content, media_type="application/x-yaml")
+    except ImportError:
+        json_content = json.dumps(openapi_schema, indent=2)
+        return Response(content=json_content, media_type="application/json")
 

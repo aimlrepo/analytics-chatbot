@@ -13,6 +13,39 @@
     
     <!-- Plotly.js Engine for Client-Side Chart Rendering -->
     <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
+
+    <!-- Marked.js for Markdown Tables and Rich Text Rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        .bot-text-content table, .rendered-markdown table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.75rem 0;
+            border-radius: 0.375rem;
+            overflow: hidden;
+        }
+        .bot-text-content th, .rendered-markdown th {
+            background-color: #1f2937;
+            color: #f3f4f6;
+            font-weight: 600;
+            text-align: left;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #374151;
+            font-size: 0.85rem;
+        }
+        .bot-text-content td, .rendered-markdown td {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #374151;
+            font-size: 0.85rem;
+        }
+        .bot-text-content tr:nth-child(even), .rendered-markdown tr:nth-child(even) {
+            background-color: #111827;
+        }
+        .bot-text-content tr:hover, .rendered-markdown tr:hover {
+            background-color: #1e293b;
+        }
+    </style>
 </head>
 <body class="bg-gray-900 text-gray-100 h-screen flex overflow-hidden">
 
@@ -24,5 +57,29 @@
         {% include 'chat_area.html' %}
     </main>
 
+    <script>
+        function renderMarkdownBubbles() {
+            if (!window.marked) return;
+            marked.setOptions({ gfm: true, breaks: true });
+            document.querySelectorAll('.bot-text-content').forEach(function(el) {
+                var rawEl = el.querySelector('.raw-markdown');
+                var targetEl = el.querySelector('.rendered-markdown');
+                if (rawEl && targetEl && !targetEl.dataset.rendered) {
+                    targetEl.dataset.rendered = "true";
+                    targetEl.innerHTML = marked.parse(rawEl.value || '');
+                } else if (!rawEl && !el.dataset.rendered) {
+                    // Fallback for bubbles without textarea wrapper
+                    el.dataset.rendered = "true";
+                    var raw = el.innerText || el.textContent;
+                    if (raw && (raw.indexOf('|') !== -1 || raw.indexOf('*') !== -1 || raw.indexOf('#') !== -1)) {
+                        el.innerHTML = marked.parse(raw);
+                    }
+                }
+            });
+        }
+        document.addEventListener("DOMContentLoaded", renderMarkdownBubbles);
+        document.body.addEventListener("htmx:afterSwap", renderMarkdownBubbles);
+        document.body.addEventListener("htmx:load", renderMarkdownBubbles);
+    </script>
 </body>
 </html>

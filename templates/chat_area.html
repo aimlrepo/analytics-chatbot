@@ -24,17 +24,37 @@
                     <div class="bg-gray-800 border border-gray-700 text-gray-100 px-4 py-3 rounded-lg max-w-2xl text-sm shadow w-full">
                         {% if turn.bot_response %}
                         <div class="bot-text-content space-y-2 prose prose-invert max-w-none">
-                            {{ turn.bot_response | safe }}
+                            <textarea class="raw-markdown" style="display:none;">{{ turn.bot_response }}</textarea>
+                            <div class="rendered-markdown"></div>
                         </div>
                         {% endif %}
                         
-                        {% if turn.plotly_json %}
-                        <div id="history-chart-canvas-{{ loop.index }}" class="mt-3 w-full" style="min-height: 350px;"></div>
+                        {% if turn.plotly_jsons and turn.plotly_jsons|length > 0 %}
+                        <div class="mt-4 space-y-4">
+                            {% for chart_json in turn.plotly_jsons %}
+                            <div class="w-full bg-gray-900 rounded border border-gray-700 p-2" style="min-height: 350px;"></div>
+                            <script>
+                                (function() {
+                                    try {
+                                        const figure = {{ chart_json | safe }};
+                                        const container = document.currentScript.previousElementSibling;
+                                        if (container && figure) {
+                                            Plotly.newPlot(container, figure.data, figure.layout, { responsive: true });
+                                        }
+                                    } catch (e) {
+                                        console.error("Error rendering historical chart:", e);
+                                    }
+                                })();
+                            </script>
+                            {% endfor %}
+                        </div>
+                        {% elif turn.plotly_json %}
+                        <div class="mt-4 w-full bg-gray-900 rounded border border-gray-700 p-2" style="min-height: 350px;"></div>
                         <script>
                             (function() {
                                 try {
                                     const figure = {{ turn.plotly_json | safe }};
-                                    const container = document.getElementById("history-chart-canvas-{{ loop.index }}");
+                                    const container = document.currentScript.previousElementSibling;
                                     if (container && figure) {
                                         Plotly.newPlot(container, figure.data, figure.layout, { responsive: true });
                                     }
@@ -76,4 +96,10 @@
         Send
     </button>
     </form>
+
+    <script>
+        if (typeof renderMarkdownBubbles === 'function') {
+            renderMarkdownBubbles();
+        }
+    </script>
 </div>

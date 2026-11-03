@@ -1,0 +1,304 @@
+openapi: 3.0.3
+info:
+  title: L2L Manufacturing Analytics Platform API
+  description: >
+    Production OpenAPI 3.0 specification for Google Gemini Enterprise, 
+    Google Vertex AI Agent Builder, and Vertex AI Extensions.
+    Couples high-performance local columnar OLAP (DuckDB) and semantic 
+    Knowledge Graph reasoning (TypeDB 2.29) under a stateful multi-agent supervisor.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000
+    description: Local development / port-forwarded server
+  - url: https://l2l-analytics-chatbot-YOUR_CLOUD_RUN_URL.a.run.app
+    description: Production Google Cloud Run service
+
+paths:
+  /api/v1/chat:
+    post:
+      operationId: ask_l2l_analytics_assistant
+      summary: Natural Language Conversational Assistant
+      description: >
+        Primary conversational entrypoint for Google Gemini Enterprise.
+        Orchestrates supervisor routing across DuckDB OLAP calculations,
+        TypeDB Knowledge Graph reasoning, and dynamic Plotly chart generation.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - message
+              properties:
+                message:
+                  type: string
+                  description: Natural language query from factory manager or engineer.
+                  example: "Top 5 dispatch types with highest downtime in Shanghai"
+                thread_id:
+                  type: string
+                  description: Optional conversational session ID for stateful turn history.
+                  example: "session-shanghai-101"
+      responses:
+        '200':
+          description: Successful AI response with synthesized answer and optional charts.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - response
+                  - thread_id
+                properties:
+                  response:
+                    type: string
+                    description: Synthesized response, executive prose, or Markdown table.
+                  thread_id:
+                    type: string
+                    description: Active thread session identifier.
+                  plotly_charts:
+                    type: array
+                    description: List of parsed Plotly chart objects if charts were generated.
+                    items:
+                      type: object
+
+  /api/v1/tools/duckdb/query:
+    post:
+      operationId: query_duckdb_sql
+      summary: Execute Analytical SQL on DuckDB Cache
+      description: >
+        Executes a vectorized DuckDB SQL query against tables 'f_l2l_dispatches'
+        and 'event_answers'. Best for numerical aggregations (SUM, AVG, COUNT),
+        multi-site metrics, date range filtering, and tabular rankings.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - sql_query
+              properties:
+                sql_query:
+                  type: string
+                  description: DuckDB SQL query string.
+                  example: "SELECT dispatchtype, SUM(downtime) as total_dt FROM f_l2l_dispatches WHERE site = 260 GROUP BY dispatchtype ORDER BY total_dt DESC LIMIT 5;"
+      responses:
+        '200':
+          description: Markdown table representation of query results.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  result_markdown:
+                    type: string
+
+  /api/v1/tools/duckdb/chart:
+    post:
+      operationId: generate_duckdb_chart
+      summary: Generate Plotly Visualization Specification
+      description: >
+        Executes a DuckDB SQL query and constructs a ready-to-render Plotly chart
+        specification ('bar', 'pie', 'line', 'scatter').
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - sql_query
+                - chart_type
+                - x_col
+                - y_col
+                - title
+              properties:
+                sql_query:
+                  type: string
+                  description: SQL query returning category and numerical values.
+                chart_type:
+                  type: string
+                  enum: [bar, pie, line, scatter]
+                  description: Plotly chart type.
+                x_col:
+                  type: string
+                  description: Dimension or category column name.
+                y_col:
+                  type: string
+                  description: Numerical metric column name.
+                title:
+                  type: string
+                  description: Descriptive chart title.
+      responses:
+        '200':
+          description: Plotly JSON specification containing data and layout.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  chart_spec:
+                    type: object
+
+  /api/v1/tools/typedb/query:
+    post:
+      operationId: query_typedb_knowledge_graph
+      summary: Execute Read Query on TypeDB Knowledge Graph
+      description: >
+        Executes a TypeQL 2.x read query with rule inference enabled against
+        TypeDB Knowledge Graph. Best for asset hierarchies, causal paths,
+        prescriptive triage, and cascading order disruptions.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - typeql_query
+              properties:
+                typeql_query:
+                  type: string
+                  description: TypeQL 2.x match/get query string.
+                  example: 'match $s isa site, has site_name "Shanghai"; (parent_location: $s, child_asset: $m) isa plant_hierarchy; $m has machinecode $mcode; get $mcode;'
+      responses:
+        '200':
+          description: Markdown table of matched entities, relations, and attributes.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  result_markdown:
+                    type: string
+
+  /api/v1/tools/typedb/order-blast-radius:
+    post:
+      operationId: get_order_blast_radius
+      summary: Production Order Blast Radius Analysis
+      description: >
+        Evaluates operational disruption for a given production order using TypeDB.
+        Identifies affected production lines (inferred via order_line_impact),
+        machines, root causes, and required trade skills.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - order_number
+              properties:
+                order_number:
+                  type: string
+                  description: Clean production order number (e.g. '200049708').
+                  example: "200049708"
+      responses:
+        '200':
+          description: Formatted multi-hop blast radius disruption breakdown.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  order_number:
+                    type: string
+                  blast_radius:
+                    type: string
+
+  /api/v1/tools/typedb/fault-triage:
+    post:
+      operationId: get_prescriptive_fault_triage
+      summary: Prescriptive Fault Triage & Skill Recommendation
+      description: >
+        Queries TypeDB Knowledge Graph for inferred recommended trade skills
+        based on historical machine repairs, failure modes, or line-level capabilities.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                machine_code:
+                  type: string
+                  description: Target machine code.
+                  example: "M-101"
+                reason_code:
+                  type: string
+                  description: Diagnosed failure root cause.
+                  example: "Motor Overheat"
+                line_code:
+                  type: string
+                  description: Target production line code.
+                  example: "L-1"
+      responses:
+        '200':
+          description: Inferred trade skill recommendation.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  triage_prescription:
+                    type: string
+
+  /api/v1/tools/typedb/plant-hierarchy:
+    post:
+      operationId: get_plant_asset_hierarchy
+      summary: Traverse Manufacturing Plant Hierarchy
+      description: >
+        Traverses plant asset containment (Site -> Area -> Line -> Machine)
+        using TypeDB transitive inference rules.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                site_name:
+                  type: string
+                  description: Factory site name ('Shanghai', 'Stargard', 'Ottawa').
+                  example: "Shanghai"
+                area_code:
+                  type: string
+                  description: Area code.
+                line_code:
+                  type: string
+                  description: Production line code.
+      responses:
+        '200':
+          description: Transitive asset containment breakdown.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hierarchy_markdown:
+                    type: string
+
+  /api/v1/health:
+    get:
+      operationId: check_api_health
+      summary: Health & Readiness Probe
+      description: Returns operational readiness status for Cloud Run and Vertex AI health checks.
+      responses:
+        '200':
+          description: Service health report.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  engines:
+                    type: object

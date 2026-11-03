@@ -15,6 +15,7 @@ from src.prompts.supervisor_prompt import get_supervisor_system_prompt
 from src.subgraphs.duckdb_agent import duckdb_subgraph
 from src.subgraphs.typedb_agent import typedb_subgraph
 from src.jev_router import jev_fast_router
+from src.guardrails import validate_user_input
 
 load_dotenv()
 
@@ -82,6 +83,30 @@ def run_typedb_subgraph(state: MultiAgentState):
     new_msgs = [m for m in new_msgs if not isinstance(m, SystemMessage)]
     return {"messages": new_msgs}
 
+# --- Node -1: NeMo Guardrails Safety Node ---
+def guardrail_node(state: MultiAgentState):
+    """Evaluates user input through NeMo Guardrails and heuristics for safety/prompt injection."""
+    messages = state.get("messages", [])
+    if not messages:
+        return {"next_agent": "direct_response"}
+
+    last_msg = messages[-1]
+    content = last_msg.content if hasattr(last_msg, "content") else str(last_msg)
+
+    is_safe, refusal = validate_user_input(content)
+    if not is_safe:
+        reply = refusal or (
+            "I cannot fulfill this request. I am a specialized Leading2Lean (L2L) Manufacturing Analytics Assistant "
+            "and cannot process requests that violate system safety policies."
+        )
+        logger.warning(f"[Guardrails Node] User input rejected: '{content[:60]}...'")
+        return {
+            "messages": [AIMessage(content=reply)],
+            "next_agent": "END"
+        }
+
+    return {"next_agent": "PASSED"}
+
 # --- Node 0: Direct Conversational Node ---
 def direct_response_node(state: MultiAgentState):
     """Immediate conversational greeting response bypassing sub-agents."""
@@ -112,6 +137,13 @@ def route_entry(state: MultiAgentState):
         return "typedb_agent"
     return "supervisor"
 
+# --- Guardrail Conditional Edge Routing ---
+def route_after_guardrail(state: MultiAgentState):
+    """If guardrail rejected input, terminate at END. Otherwise, delegate to JEV fast router."""
+    if state.get("next_agent") == "END":
+        return END
+    return route_entry(state)
+
 # --- Supervisor Fallback Conditional Edge Routing ---
 def route_next_step(state: MultiAgentState):
     next_step = state.get("next_agent")
@@ -124,19 +156,25 @@ def route_next_step(state: MultiAgentState):
 # --- Compose Top-Level Multi-Agent Graph ---
 workflow = StateGraph(MultiAgentState)
 
+workflow.add_node("guardrails", guardrail_node)
 workflow.add_node("direct_response", direct_response_node)
 workflow.add_node("supervisor", supervisor_node)
 workflow.add_node("duckdb_agent", run_duckdb_subgraph)
 workflow.add_node("typedb_agent", run_typedb_subgraph)
 
-# High-Speed JEV Router at entry point
-workflow.set_conditional_entry_point(
-    route_entry,
+# Entry point starts with NeMo Guardrails evaluation
+workflow.set_entry_point("guardrails")
+
+# From guardrails: route to END if blocked, or to the designated specialist via JEV Router
+workflow.add_conditional_edges(
+    "guardrails",
+    route_after_guardrail,
     {
         "direct_response": "direct_response",
         "duckdb_agent": "duckdb_agent",
         "typedb_agent": "typedb_agent",
-        "supervisor": "supervisor"
+        "supervisor": "supervisor",
+        END: END
     }
 )
 

@@ -43,13 +43,18 @@ def jev_fast_router(query_text: str) -> Literal["duckdb_agent", "typedb_agent", 
     )
 
     # --- 3. V - VERIFICATION ---
-    # Rule 1: Aggregations, plots, or SQL schema (site, dispatchtype, etc.) always take priority (DuckDB)
+    # Rule 1: Explicit Causal, Blast Radius, or Hierarchy queries go to TypeDB
+    # (even if "site" or "facility" is mentioned, unless the user asked for counts/aggregations/charts)
+    if (is_causal or has_typedb_schema) and not is_analytical:
+        return "typedb_agent"
+
+    # Rule 2: Aggregations, plots, or SQL schema (site, dispatchtype, etc.) go to DuckDB
     if is_analytical or has_duckdb_schema:
         return "duckdb_agent"
 
-    # Rule 2: Causal, blast radius, containment (TypeDB)
+    # Rule 3: Any remaining causal signals
     if is_causal or has_typedb_schema:
         return "typedb_agent"
 
-    # Rule 3: Ambiguous queries fallback to Supervisor
+    # Rule 4: Ambiguous queries fallback to Supervisor
     return "supervisor"

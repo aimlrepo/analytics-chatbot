@@ -1,0 +1,81 @@
+Collecting langchain-anthropic
+  Downloading langchain_anthropic-1.7.7-py3-none-any.whl.metadata (5.1 kB)
+Collecting anthropic>=0.120.0 (from langchain-anthropic)
+  Downloading anthropic-2.3.0-py3-none-any.whl.metadata (6.0 kB)
+Collecting langchain-core<2.0.0,>=1.6.10 (from langchain-anthropic)
+  Downloading langchain_core-1.7.0-py3-none-any.whl.metadata (4.8 kB)
+Requirement already satisfied: pydantic>=2.7.4 in /usr/local/lib/python3.11/site-packages (from langchain-anthropic) (2.14.1)
+Requirement already satisfied: anyio<5,>=4.1.0 in /usr/local/lib/python3.11/site-packages (from anthropic>=0.120.0->langchain-anthropic) (4.15.1)
+Collecting docstring-parser<1,>=0.15 (from anthropic>=0.120.0->langchain-anthropic)
+  Downloading docstring_parser-0.18.0-py3-none-any.whl.metadata (3.5 kB)
+Collecting httpx2<3,>=2.0.0 (from anthropic>=0.120.0->langchain-anthropic)
+  Downloading httpx2-2.16.0-py3-none-any.whl.metadata (10 kB)
+Requirement already satisfied: jiter<1,>=0.4.0 in /usr/local/lib/python3.11/site-packages (from anthropic>=0.120.0->langchain-anthropic) (0.18.0)
+Collecting opentelemetry-api<2,>=1.1.0 (from anthropic>=0.120.0->langchain-anthropic)
+  Downloading opentelemetry_api-1.45.1-py3-none-any.whl.metadata (1.4 kB)
+Requirement already satisfied: sniffio<2,>=1 in /usr/local/lib/python3.11/site-packages (from anthropic>=0.120.0->langchain-anthropic) (1.3.1)
+Requirement already satisfied: typing-extensions<5,>=4.14 in /usr/local/lib/python3.11/site-packages (from anthropic>=0.120.0->langchain-anthropic) (4.16.0)
+Requirement already satisfied: httpx<1.0.0,>=0.23.0 in /usr/local/lib/python3.11/site-packages (from langchain-core<2.0.0,>=1.6.10->langchain-anthropic) (0.28.1)
+Requirement already satisfied: jsonpatch<2.0.0,>=1.33.0 in /usr/local/lib/python3.11/site-packages (from langchain-core<2.0.0,>=1.6.10->langchain-anthropic) (1.37)
+Collecting langchain-protocol>=0.0.20 (from langchain-core<2.0.0,>=1.6.10->langchain-anthropic)
+  Downloading langchain_protocol-0.0.20-py3-none-any.whl.metadata (2.4 kB)
+Collecting langsmith<1.0.0,>=0.14.9 (from langchain-core<2.0.0,>=1.6.10->langchain-anthropic)
+  Downloading langsmith-0.14.14-py3-none-any.whl.metadata (38 kB)
+Requirement already satisfied: packaging>=23.2.0 in /usr/local/lib/python3.11/site-packages (from langchain-core<2.0.0,>=1.6.10->langchain-anthropic) (24.2)
+Requirement already satisfied: pyyaml<7.0.0,>=5.3.0 in /usr/local/lib/python3.11/site-packages (from langchain-core<2.0.0,>=1.6.10->langchain-anthropic) (6.0.3)
+Requirement already satisfied: tenacity!=8.4.0,<10.0.0,>=8.1.0 in /usr/local/lib/python3.11/site-packages (from langchain-core<2.0.0,>=1.6.10->langchain-anthropic) (8.5.0)
+Collecting uuid-utils<1.0,>=0.12.0 (from langchain-core<2.0.0,>=1.6.10->langchain-anthropic)
+  Downloading uuid_utils-0.19.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.4 kB)
+Requirement already satisfied: annotated-types>=0.6.0 in /usr/local/lib/python3.11/site-packages (from pydantic>=2.7.4->langchain-anthropic) (0.8.0)
+Requirement already satisfied: pydantic-core==2.50.1 in /usr/local/lib/python3.11/site-packages (from pydantic>=2.7.4->langchain-anthropic) (2.50.1)
+Requirement already satisfied: typing-inspection>=0.4.4 in /usr/local/lib/python3.11/site-packages (from pydantic>=2.7.4->langchain-anthropic) (0.4.4)
+Requirement already satisfied: idna>=2.8 in /usr/local/lib/python3.11/site-packages (from anyio<5,>=4.1.0->anthropic>=0.120.0->langchain-anthropic) (3.20)
+Requirement already satisfied: certifi in /usr/local/lib/python3.11/site-packages (from httpx<1.0.0,>=0.23.0->langchain-core<2.0.0,>=1.6.10->langchain-anthropic) (2026.10.23)
+Requirement already satisfied: httpcore==1.* in /usr/local/lib/python3.11/site-packages (from httpx<1.0.0,>=0.23.0->langchain-core<2.0.0,>=1.6.10->langchain-anthropic) (1.0.9)
+Requirement already satisfied: h11>=0.16 in /usr/local/lib/python3.11/site-packages (from httpcore==1.*->httpx<1.0.0,>=0.23.0->langchain-core<2.0.0,>=1.6.10->langchain-anthropic) (0.16.0)
+Collecting httpcore2==2.16.0 (from httpx2<3,>=2.0.0->anthropic>=0.120.0->langchain-anthropic)
+  Downloading httpcore2-2.16.0-py3-none-any.whl.metadata (27 kB)
+Collecting truststore>=0.10 (from httpx2<3,>=2.0.0->anthropic>=0.120.0->langchain-anthropic)
+  Downloading truststore-0.10.5-py3-none-any.whl.metadata (4.5 kB)
+Requirement already satisfied: jsonpointer>=3.2 in /usr/local/lib/python3.11/site-packages (from jsonpatch<2.0.0,>=1.33.0->langchain-core<2.0.0,>=1.6.10->langchain-anthropic) (3.5)
+Requirement already satisfied: distro<2,>=1.7.0 in /usr/local/lib/python3.11/site-packages (from langsmith<1.0.0,>=0.14.9->langchain-core<2.0.0,>=1.6.10->langchain-anthropic) (1.9.0)
+Requirement already satisfied: orjson>=3.9.14 in /usr/local/lib/python3.11/site-packages (from langsmith<1.0.0,>=0.14.9->langchain-core<2.0.0,>=1.6.10->langchain-anthropic) (3.13.0)
+Requirement already satisfied: requests-toolbelt>=1.0.0 in /usr/local/lib/python3.11/site-packages (from langsmith<1.0.0,>=0.14.9->langchain-core<2.0.0,>=1.6.10->langchain-anthropic) (1.0.0)
+Requirement already satisfied: requests>=2.0.0 in /usr/local/lib/python3.11/site-packages (from langsmith<1.0.0,>=0.14.9->langchain-core<2.0.0,>=1.6.10->langchain-anthropic) (2.34.2)
+Requirement already satisfied: websockets>=15.0 in /usr/local/lib/python3.11/site-packages (from langsmith<1.0.0,>=0.14.9->langchain-core<2.0.0,>=1.6.10->langchain-anthropic) (17.3)
+Requirement already satisfied: xxhash>=3.0.0 in /usr/local/lib/python3.11/site-packages (from langsmith<1.0.0,>=0.14.9->langchain-core<2.0.0,>=1.6.10->langchain-anthropic) (3.8.2)
+Collecting zstandard>=0.23.0 (from langsmith<1.0.0,>=0.14.9->langchain-core<2.0.0,>=1.6.10->langchain-anthropic)
+  Downloading zstandard-0.25.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (3.3 kB)
+Requirement already satisfied: charset_normalizer<4,>=2 in /usr/local/lib/python3.11/site-packages (from requests>=2.0.0->langsmith<1.0.0,>=0.14.9->langchain-core<2.0.0,>=1.6.10->langchain-anthropic) (3.5.2)
+Requirement already satisfied: urllib3<3,>=1.26 in /usr/local/lib/python3.11/site-packages (from requests>=2.0.0->langsmith<1.0.0,>=0.14.9->langchain-core<2.0.0,>=1.6.10->langchain-anthropic) (2.8.0)
+Downloading langchain_anthropic-1.7.7-py3-none-any.whl (65 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 65.5/65.5 kB 3.3 MB/s eta 0:00:00
+Downloading anthropic-2.3.0-py3-none-any.whl (2.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.2/2.2 MB 8.1 MB/s eta 0:00:00
+Downloading langchain_core-1.7.0-py3-none-any.whl (574 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 574.7/574.7 kB 8.4 MB/s eta 0:00:00
+Downloading docstring_parser-0.18.0-py3-none-any.whl (22 kB)
+Downloading httpx2-2.16.0-py3-none-any.whl (97 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 97.9/97.9 kB 5.3 MB/s eta 0:00:00
+Downloading httpcore2-2.16.0-py3-none-any.whl (85 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 85.1/85.1 kB 3.4 MB/s eta 0:00:00
+Downloading langchain_protocol-0.0.20-py3-none-any.whl (7.3 kB)
+Downloading langsmith-0.14.14-py3-none-any.whl (911 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 911.8/911.8 kB 9.2 MB/s eta 0:00:00
+Downloading opentelemetry_api-1.45.1-py3-none-any.whl (60 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 60.3/60.3 kB 3.4 MB/s eta 0:00:00
+Downloading uuid_utils-0.19.0-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (330 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 330.3/330.3 kB 5.3 MB/s eta 0:00:00
+Downloading truststore-0.10.5-py3-none-any.whl (19 kB)
+Downloading zstandard-0.25.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (5.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.6/5.6 MB 9.2 MB/s eta 0:00:00
+Installing collected packages: zstandard, uuid-utils, truststore, opentelemetry-api, langchain-protocol, docstring-parser, httpcore2, httpx2, langsmith, anthropic, langchain-core, langchain-anthropic
+  Attempting uninstall: langsmith
+    Found existing installation: langsmith 0.1.147
+    Uninstalling langsmith-0.1.147:
+      Successfully uninstalled langsmith-0.1.147
+  Attempting uninstall: langchain-core
+    Found existing installation: langchain-core 0.2.43
+    Uninstalling langchain-core-0.2.43:
+      Successfully uninstalled langchain-core-0.2.43
+Successfully installed anthropic-2.3.0 docstring-parser-0.18.0 httpcore2-2.16.0 httpx2-2.16.0 langchain-anthropic-1.7.7 langchain-core-1.7.0 langchain-protocol-0.0.20 langsmith-0.14.14 opentelemetry-api-1.45.1 truststore-0.10.5 uuid-utils-0.19.0 zstandard-0.25.0

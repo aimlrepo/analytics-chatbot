@@ -33,8 +33,9 @@
 - [ ] **SQL & TypeQL Sandboxing**:
   - Use `sqlglot` to parse generated SQL before execution and restrict commands strictly to read-only `SELECT` statements (blocking `ATTACH`, `COPY`, file operations).
   - Sanitize TypeQL input to prevent injection in `query_typedb`.
-- [ ] **Activate NeMo Guardrails**:
-  - Wire `nemoguardrails` into the top-level LangGraph workflow to prevent jailbreaks, prompt injection, and hallucinations.
+- [x] **Activate NeMo Guardrails** (Completed):
+  - Integrated `src/guardrails.py` with fast heuristics and NeMo `self_check_input` rail.
+  - Added entry-point `guardrails` node in `src/agent.py` guarding against jailbreaks and prompt injections.
 - [ ] **API Authentication**:
   - Protect ETL triggers (`/sync-cache`, `/sync-typedb`) and user endpoints with API keys or OAuth2 tokens.
 
@@ -45,3 +46,17 @@
   - Replace full table overwrite (`CREATE OR REPLACE TABLE`) in `src/cache_pyarrow.py` with an incremental sync using watermark timestamps (`WHERE dispatch_reported > (SELECT COALESCE(MAX(dispatch_reported), '1970-01-01') FROM f_l2l_dispatches)`).
 - [ ] **Automated Background Sync**:
   - Add APScheduler or Celery/cron task to periodically trigger delta refreshes.
+
+---
+
+## 5. Enterprise Connectors & Ecosystem Integration (Upcoming)
+- [ ] **Gemini Enterprise / Vertex AI Agent Builder OpenAPI Connector**:
+  - Expose REST API endpoints in `main.py`:
+    - `POST /api/v1/analytics/sql` (DuckDB queries over `f_l2l_dispatches` & `event_answers`).
+    - `POST /api/v1/analytics/typedb` (TypeDB Knowledge Graph operational disruption & triage).
+  - Export OpenAPI 3.0 specification (`/openapi.json`).
+  - Register as an OpenAPI Tool in Vertex AI Agent Builder / Gemini Enterprise with authentication (API Key / Cloud IAM bearer token).
+- [ ] **TypeDB 3.x Migration (Post-Demo)**:
+  - Bump container to `vaticle/typedb:3.x` and driver to `typedb-driver>=3.0.0`.
+  - Update `schema.tql` to replace rules with TypeDB 3 schema functions (`define function`).
+  - Update `src/typedb_sync.py` and `src/prompts/typedb_prompt.py` to TypeQL 3 syntax.

@@ -25,9 +25,9 @@ ANALYTICAL_PATTERNS = [
 
 # J - Judgment: Causal / Topological Modifiers (TypeDB)
 CAUSAL_PATTERNS = [
-    r"\b(blast radius|impact radius)\b",
+    r"\b(blast radius|impact radius|impact analysis|quality analysis|disruption analysis|disruption|operational impact|impact scope)\b",
     r"\b(root cause|why did|reason for failure|cause of failure|failure mode)\b",
-    r"\b(who can fix|which trade|skill required|assigned to fix|triage|historical resolution)\b",
+    r"\b(who can fix|which trade|the trade|trade|trades|tradecode|skill required|skills?|assigned to fix|triage|historical resolution|technician|mechanic|electrician)\b",
     r"\b(which machines belong to|what lines are in|located in|belong to|asset hierarchy|containment|parent location|child asset)\b",
     r"\b((halted|blocked|delayed|disrupted)(\s+by)?\s+order)\b"
 ]
@@ -41,5 +41,6 @@ DUCKDB_SCHEMA_SIGNALS = [
 # E - Evaluation: Explicit Knowledge Graph Tokens (TypeDB)
 TYPEDB_SCHEMA_SIGNALS = [
     "plant_hierarchy", "maintenance_dispatch", "active_order", 
+    "production_order", "trade", "trades", "tradecode",
     "transitive", "inference rule", "hyper-relation"
 ]
